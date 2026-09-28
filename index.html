@@ -1,1999 +1,1901 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Row Reduction Calculator</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    :root {
-      font-family: Inter, system-ui, sans-serif;
-      color: #172033;
-      background: #f5f7fb;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-    }
-
-    header {
-      background: white;
-      border-bottom: 1px solid #e2e7ef;
-      padding: 26px 32px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    header p {
-      margin: 6px 0 0;
-      color: #667085;
-    }
-
-    main {
-      max-width: 1200px;
-      margin: 28px auto;
-      padding: 0 20px;
-
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 390px;
-      gap: 24px;
-    }
-
-    .card {
-      background: white;
-      border: 1px solid #e2e7ef;
-      border-radius: 14px;
-      padding: 20px;
-      box-shadow: 0 4px 18px rgba(20, 30, 50, 0.05);
-    }
-
-    /* ---------------------------------------------------------
-       Toolbar
-    --------------------------------------------------------- */
-
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-
-    button {
-      border: 1px solid #d5dbe6;
-      background: white;
-      border-radius: 8px;
-      padding: 9px 13px;
-      font: inherit;
-      cursor: pointer;
-    }
-
-    button:hover:not(:disabled) {
-      background: #f4f6fa;
-    }
-
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.4;
-    }
-
-    button.primary {
-      background: #172033;
-      color: white;
-      border-color: #172033;
-    }
-
-    button.undo {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-
-      font-weight: 600;
-
-      background: #fff;
-      border-color: #bfc7d6;
-    }
-
-    button.undo:not(:disabled):hover {
-      background: #f0f2f7;
-    }
-
-    button.danger {
-      color: #b42318;
-    }
-
-    .separator {
-      width: 1px;
-      height: 28px;
-      background: #e2e7ef;
-      margin: 0 4px;
-    }
-
-    /* ---------------------------------------------------------
-       Matrix
-    --------------------------------------------------------- */
-
-    .matrix {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-
-      overflow-x: auto;
-      padding: 10px 2px;
-    }
-
-    .matrix-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      padding: 7px 8px;
-
-      border-radius: 10px;
-      border: 1px solid transparent;
-
-      background: #fafbfe;
-
-      transition:
-        background 120ms ease,
-        border-color 120ms ease,
-        opacity 120ms ease;
-    }
-
-    .matrix-row.dragging {
-      opacity: 0.4;
-    }
-
-    .matrix-row.drag-target {
-      background: #f1edff;
-      border-color: #8066e8;
-    }
-
-    .drag-handle {
-      width: 28px;
-
-      color: #98a2b3;
-
-      cursor: grab;
-      user-select: none;
-
-      font-size: 18px;
-      text-align: center;
-    }
-
-    .drag-handle:active {
-      cursor: grabbing;
-    }
-
-    .row-label {
-      width: 30px;
-
-      color: #667085;
-      font-weight: 700;
-
-      user-select: none;
-    }
-
-    .cells {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .cell {
-      width: 68px;
-      height: 38px;
-
-      border: 1px solid #ccd3df;
-      border-radius: 7px;
-
-      padding: 5px 8px;
-
-      background: white;
-
-      text-align: right;
-
-      font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        monospace;
-
-      font-size: 16px;
-    }
-
-    .cell:focus {
-      outline: 2px solid #8066e8;
-      border-color: transparent;
-    }
-
-    .augmented-bar {
-      height: 30px;
-
-      border-left: 2px solid #667085;
-
-      margin: 0 5px;
-    }
-
-    .hint {
-      margin-top: 14px;
-
-      color: #667085;
-
-      font-size: 13px;
-    }
-
-    /* ---------------------------------------------------------
-       History
-    --------------------------------------------------------- */
-
-    .history-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      margin-bottom: 16px;
-    }
-
-    .history-title h2 {
-      margin: 0;
-      font-size: 17px;
-    }
-
-    .step-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-
-      max-height: calc(100vh - 180px);
-      overflow-y: auto;
-
-      padding-right: 3px;
-    }
-
-    .step {
-      border: 1px solid #e2e7ef;
-      border-radius: 10px;
-
-      overflow: hidden;
-
-      background: #fff;
-
-      cursor: pointer;
-
-      transition:
-        border-color 120ms ease,
-        box-shadow 120ms ease;
-    }
-
-    .step:hover {
-      border-color: #b8c0d0;
-      box-shadow: 0 3px 10px rgba(20, 30, 50, 0.06);
-    }
-
-    .step.current {
-      border-color: #8066e8;
-      box-shadow: 0 0 0 2px #8066e820;
-    }
-
-    .step-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      padding: 9px 11px;
-
-      background: #f7f8fb;
-
-      font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        monospace;
-
-      font-size: 12px;
-    }
-
-    .step-number {
-      color: #667085;
-    }
-
-    .step-operation {
-      padding: 9px 11px 3px;
-
-      font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        monospace;
-
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .mini-matrix {
-      padding: 8px 11px 11px;
-
-      overflow-x: auto;
-    }
-
-    .mini-row {
-      display: flex;
-      gap: 5px;
-
-      margin-bottom: 4px;
-
-      font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        monospace;
-
-      font-size: 12px;
-    }
-
-    .mini-cell {
-      min-width: 32px;
-      text-align: right;
-    }
-
-    .mini-bar {
-      border-left: 1px solid #667085;
-      margin: 0 2px;
-    }
-
-    .initial-step {
-      padding: 11px;
-    }
-
-    .initial-step .step-operation {
-      padding: 0 0 8px;
-    }
-
-    .empty-history {
-      color: #98a2b3;
-      font-size: 14px;
-    }
-
-    .restore-note {
-      padding: 7px 11px 10px;
-
-      color: #98a2b3;
-      font-size: 11px;
-    }
-
-    /* ---------------------------------------------------------
-       Operation dialog
-    --------------------------------------------------------- */
-
-    .overlay {
-      position: fixed;
-      inset: 0;
-
-      display: none;
-
-      align-items: center;
-      justify-content: center;
-
-      padding: 20px;
-
-      background: rgba(23, 32, 51, 0.35);
-    }
-
-    .dialog {
-      width: min(430px, 100%);
-
-      background: white;
-      border-radius: 14px;
-
-      padding: 22px;
-
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    }
-
-    .dialog h2 {
-      margin: 0 0 8px;
-
-      font-size: 19px;
-    }
-
-    .operation-preview {
-      margin: 16px 0;
-
-      padding: 13px;
-
-      border-radius: 9px;
-
-      background: #f7f4ff;
-
-      font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        monospace;
-
-      font-size: 16px;
-    }
-
-    .coefficient {
-      width: 120px;
-
-      padding: 9px;
-
-      border: 1px solid #ccd3df;
-      border-radius: 8px;
-
-      font:
-        16px ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        monospace;
-    }
-
-    .dialog-actions {
-      display: flex;
-
-      justify-content: flex-end;
-
-      gap: 8px;
-
-      margin-top: 20px;
-    }
-
-    @media (max-width: 850px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-
-      .step-list {
-        max-height: none;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Row Reduction Calculator</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f6f7f9;
+            --panel: #ffffff;
+            --border: #e1e4e8;
+            --text: #1f2328;
+            --muted: #6b7280;
+            --accent: #4f46e5;
+            --accent-light: #eef2ff;
+            --danger: #dc2626;
+            --shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family:
+                Inter,
+                ui-sans-serif,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        /* =========================================================
+           APP LAYOUT
+           ========================================================= */
+
+        .app {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .workspace {
+            min-width: 0;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .workspace-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* =========================================================
+           HEADER
+           ========================================================= */
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+
+        .subtitle {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* =========================================================
+           BUTTONS
+           ========================================================= */
+
+        .button {
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--text);
+            border-radius: 8px;
+            padding: 8px 13px;
+            font-size: 14px;
+            font-weight: 500;
+            transition:
+                background 0.15s,
+                border-color 0.15s,
+                transform 0.05s;
+        }
+
+        .button:hover {
+            background: #f9fafb;
+            border-color: #c9cdd2;
+        }
+
+        .button:active {
+            transform: translateY(1px);
+        }
+
+        .button.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .button.primary:hover {
+            background: #4338ca;
+            border-color: #4338ca;
+        }
+
+        .button.danger {
+            color: var(--danger);
+        }
+
+        .button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        /* =========================================================
+           MATRIX CARD
+           ========================================================= */
+
+        .matrix-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .matrix-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .matrix-toolbar-left,
+        .matrix-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .size-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .size-control input {
+            width: 58px;
+            padding: 7px 8px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            outline: none;
+        }
+
+        .size-control input:focus {
+            border-color: var(--accent);
+        }
+
+        /* =========================================================
+           MATRIX
+           ========================================================= */
+
+        .matrix-container {
+            padding: 42px;
+            overflow-x: auto;
+        }
+
+        .matrix {
+            display: inline-flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: max-content;
+        }
+
+        .matrix-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 48px;
+        }
+
+        .row-handle {
+            width: 30px;
+            color: #9ca3af;
+            font-size: 20px;
+            text-align: center;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .row-handle:active {
+            cursor: grabbing;
+        }
+
+        .matrix-row.dragging {
+            opacity: 0.45;
+        }
+
+        .matrix-row.drag-over {
+            outline: 2px dashed var(--accent);
+            outline-offset: 4px;
+            border-radius: 6px;
+        }
+
+        .cell {
+            width: 76px;
+            height: 46px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            text-align: center;
+            font-size: 17px;
+            outline: none;
+            transition:
+                border-color 0.15s,
+                box-shadow 0.15s;
+        }
+
+        .cell:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .separator {
+            width: 2px;
+            height: 42px;
+            margin: 0 7px;
+            background: #c7cbd1;
+            border-radius: 2px;
+        }
+
+        /* =========================================================
+           EMPTY / INSTRUCTIONS
+           ========================================================= */
+
+        .instructions {
+            margin-top: 18px;
+            padding: 16px 18px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: white;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .instructions strong {
+            color: var(--text);
+        }
+
+        /* =========================================================
+           HISTORY PANEL
+           ========================================================= */
+
+        .history-panel {
+            min-width: 0;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-left: 1px solid var(--border);
+        }
+
+        .history-header {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 18px;
+            border-bottom: 1px solid var(--border);
+            background: white;
+        }
+
+        .history-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 650;
+        }
+
+        .history-count {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /*
+         * This is the important part:
+         *
+         * The panel itself is a flex column, while only the list
+         * is allowed to scroll.
+         */
+        .history-list {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 12px;
+            overscroll-behavior: contain;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 999px;
+        }
+
+        .history-empty {
+            padding: 24px 12px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .history-item {
+            margin-bottom: 8px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fafafa;
+            cursor: pointer;
+            transition:
+                border-color 0.15s,
+                background 0.15s,
+                transform 0.05s;
+        }
+
+        .history-item:hover {
+            background: #f8fafc;
+            border-color: #cdd2d8;
+        }
+
+        .history-item:active {
+            transform: translateY(1px);
+        }
+
+        .history-item.current {
+            background: var(--accent-light);
+            border-color: #a5b4fc;
+        }
+
+        .history-item-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 7px;
+        }
+
+        .history-operation {
+            font-family:
+                ui-monospace,
+                SFMono-Regular,
+                Menlo,
+                Monaco,
+                Consolas,
+                monospace;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .history-state {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .mini-matrix {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            overflow-x: auto;
+            padding: 5px 0;
+        }
+
+        .mini-row {
+            display: flex;
+            gap: 4px;
+            min-width: max-content;
+        }
+
+        .mini-cell {
+            min-width: 31px;
+            padding: 3px 4px;
+            border-radius: 4px;
+            background: white;
+            text-align: center;
+            font-family:
+                ui-monospace,
+                SFMono-Regular,
+                Menlo,
+                Monaco,
+                Consolas,
+                monospace;
+            font-size: 10px;
+        }
+
+        .mini-separator {
+            width: 1px;
+            margin: 0 2px;
+            background: #c7cbd1;
+        }
+
+        /* =========================================================
+           DIALOG
+           ========================================================= */
+
+        dialog {
+            width: min(440px, calc(100vw - 32px));
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 0;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        dialog::backdrop {
+            background: rgba(15, 23, 42, 0.35);
+            backdrop-filter: blur(2px);
+        }
+
+        .dialog-content {
+            padding: 24px;
+        }
+
+        .dialog-title {
+            margin: 0 0 8px;
+            font-size: 18px;
+        }
+
+        .dialog-description {
+            margin: 0 0 20px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .operation-preview {
+            margin-bottom: 18px;
+            padding: 13px;
+            border-radius: 9px;
+            background: #f3f4f6;
+            font-family:
+                ui-monospace,
+                SFMono-Regular,
+                Menlo,
+                Monaco,
+                Consolas,
+                monospace;
+            text-align: center;
+        }
+
+        .coefficient-field {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .coefficient-field label {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .coefficient-field input {
+            width: 120px;
+            padding: 9px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .coefficient-field input:focus {
+            border-color: var(--accent);
+        }
+
+        .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .error {
+            margin-top: 8px;
+            color: var(--danger);
+            font-size: 13px;
+        }
+
+        /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+        @media (max-width: 850px) {
+            body {
+                overflow: auto;
+            }
+
+            .app {
+                display: block;
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+
+            .workspace {
+                overflow: visible;
+                padding: 20px;
+            }
+
+            .history-panel {
+                height: 500px;
+                border-top: 1px solid var(--border);
+                border-left: 0;
+            }
+
+            .matrix-container {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .matrix-toolbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .workspace {
+                padding: 14px;
+            }
+
+            .matrix-container {
+                padding: 20px 12px;
+            }
+
+            .cell {
+                width: 64px;
+            }
+        }
+    </style>
 </head>
-
 
 <body>
 
-<header>
+<div class="app">
 
-  <h1>Row Reduction Calculator</h1>
+    <!-- =========================================================
+         MAIN WORKSPACE
+         ========================================================= -->
 
-  <p>
-    Drag one row onto another to perform an elementary row operation.
-  </p>
+    <main class="workspace">
+        <div class="workspace-inner">
 
-</header>
+            <header class="topbar">
+                <div>
+                    <h1 class="title">Row Reduction</h1>
+                    <p class="subtitle">
+                        Drag one row onto another to perform an elementary row operation.
+                    </p>
+                </div>
 
+                <div class="topbar-actions">
+                    <button
+                        id="undoButton"
+                        class="button"
+                        type="button"
+                        disabled
+                    >
+                        ↶ Undo
+                    </button>
 
-<main>
+                    <button
+                        id="resetButton"
+                        class="button danger"
+                        type="button"
+                    >
+                        Reset
+                    </button>
+                </div>
+            </header>
 
-  <!-- ========================================================
-       Main matrix
-  ========================================================= -->
+            <section class="matrix-card">
 
-  <section class="card">
+                <div class="matrix-toolbar">
 
-    <div class="toolbar">
+                    <div class="matrix-toolbar-left">
 
-      <!-- Most important new control -->
+                        <div class="size-control">
+                            <span>Rows</span>
+                            <input
+                                id="rowCount"
+                                type="number"
+                                min="1"
+                                max="20"
+                                value="3"
+                            >
+                        </div>
 
-      <button
-        id="undo"
-        class="undo"
-        disabled
-        title="Undo last operation (Ctrl+Z)"
-      >
-        ↶ Undo
-      </button>
+                        <div class="size-control">
+                            <span>Columns</span>
+                            <input
+                                id="columnCount"
+                                type="number"
+                                min="2"
+                                max="20"
+                                value="4"
+                            >
+                        </div>
 
+                        <button
+                            id="applySizeButton"
+                            class="button"
+                            type="button"
+                        >
+                            Apply size
+                        </button>
 
-      <div class="separator"></div>
+                    </div>
 
+                    <div class="matrix-toolbar-right">
 
-      <button id="add-row">
-        + Row
-      </button>
+                        <button
+                            id="addRowButton"
+                            class="button"
+                            type="button"
+                        >
+                            + Row
+                        </button>
 
-      <button id="remove-row">
-        − Row
-      </button>
+                        <button
+                            id="removeRowButton"
+                            class="button"
+                            type="button"
+                        >
+                            − Row
+                        </button>
 
-      <button id="add-column">
-        + Column
-      </button>
+                        <button
+                            id="addColumnButton"
+                            class="button"
+                            type="button"
+                        >
+                            + Column
+                        </button>
 
-      <button id="remove-column">
-        − Column
-      </button>
+                        <button
+                            id="removeColumnButton"
+                            class="button"
+                            type="button"
+                        >
+                            − Column
+                        </button>
 
+                    </div>
+                </div>
 
-      <div class="separator"></div>
+                <div class="matrix-container">
+                    <div id="matrix" class="matrix"></div>
+                </div>
 
+            </section>
 
-      <button id="reset" class="danger">
-        Reset
-      </button>
+            <div class="instructions">
+                <strong>How it works:</strong>
+                drag a row onto another row. You'll then choose the coefficient
+                for an operation of the form
+                <strong>R₂ ← R₂ + cR₁</strong>.
+                Use <strong>Ctrl+Z</strong> / <strong>Cmd+Z</strong> to undo.
+            </div>
 
-    </div>
+        </div>
+    </main>
 
+    <!-- =========================================================
+         HISTORY
+         ========================================================= -->
 
-    <div id="matrix" class="matrix"></div>
+    <aside class="history-panel">
 
+        <div class="history-header">
+            <div>
+                <h2 class="history-title">History</h2>
+                <div class="history-count" id="historyCount">
+                    0 operations
+                </div>
+            </div>
+        </div>
 
-    <div class="hint">
+        <div
+            id="historyList"
+            class="history-list"
+        ></div>
 
-      Grab the <strong>⠿</strong> handle and drag a row onto another row.
-
-      <br />
-
-      <strong>Ctrl+Z</strong> / <strong>⌘Z</strong> also undoes the last operation.
-
-    </div>
-
-  </section>
-
-
-  <!-- ========================================================
-       History
-  ========================================================= -->
-
-  <aside class="card">
-
-    <div class="history-title">
-
-      <h2>
-        Operation history
-      </h2>
-
-    </div>
-
-
-    <div
-      id="history"
-      class="step-list"
-    >
-
-    </div>
-
-  </aside>
-
-</main>
-
-
-<!-- ==========================================================
-     Operation dialog
-=========================================================== -->
-
-<div
-  id="overlay"
-  class="overlay"
->
-
-  <div class="dialog">
-
-    <h2>
-      Modify row
-    </h2>
-
-
-    <div
-      id="operation-preview"
-      class="operation-preview"
-    ></div>
-
-
-    <label>
-
-      Multiplier
-
-      <br />
-
-      <input
-        id="coefficient"
-        class="coefficient"
-        value="-1"
-        autocomplete="off"
-      />
-
-    </label>
-
-
-    <div class="dialog-actions">
-
-      <button id="cancel">
-        Cancel
-      </button>
-
-      <button
-        id="apply"
-        class="primary"
-      >
-        Apply
-      </button>
-
-    </div>
-
-  </div>
+    </aside>
 
 </div>
 
 
+<!-- =============================================================
+     OPERATION DIALOG
+     ============================================================= -->
+
+<dialog id="operationDialog">
+
+    <div class="dialog-content">
+
+        <h2 class="dialog-title">
+            Row operation
+        </h2>
+
+        <p class="dialog-description">
+            Choose the coefficient for the operation.
+        </p>
+
+        <div
+            id="operationPreview"
+            class="operation-preview"
+        ></div>
+
+        <div class="coefficient-field">
+
+            <label for="coefficient">
+                Coefficient
+            </label>
+
+            <input
+                id="coefficient"
+                type="text"
+                value="1"
+                autocomplete="off"
+                spellcheck="false"
+            >
+
+        </div>
+
+        <div
+            id="coefficientError"
+            class="error"
+            hidden
+        ></div>
+
+        <div class="dialog-actions">
+
+            <button
+                id="cancelOperation"
+                class="button"
+                type="button"
+            >
+                Cancel
+            </button>
+
+            <button
+                id="applyOperation"
+                class="button primary"
+                type="button"
+            >
+                Apply
+            </button>
+
+        </div>
+
+    </div>
+
+</dialog>
+
+
 <script>
+    // =============================================================
+    // STATE
+    // =============================================================
 
-//
-// ============================================================
-// Matrix state
-// ============================================================
-//
+    let matrix = [
+        [1, 2, 3, 4],
+        [2, 5, 7, 9],
+        [1, 1, 2, 3]
+    ];
 
-const initialMatrix = [
-  ["1", "2", "3", "4"],
-  ["2", "5", "7", "9"],
-  ["1", "1", "2", "3"]
-];
+    let history = [];
 
+    let draggedRow = null;
 
-//
-// The current matrix.
-//
+    let pendingOperation = null;
 
-let matrix =
-  initialMatrix.map(row => [...row]);
 
+    // =============================================================
+    // DOM
+    // =============================================================
 
-//
-// Every operation stores:
-//
-// {
-//   operation: "...",
-//   matrix: [...]
-//
-// }
-//
-// This means history isn't merely a list of strings.
-// It is a complete timeline of the calculation.
-//
+    const matrixElement = document.getElementById("matrix");
 
-let history = [];
+    const historyListElement =
+        document.getElementById("historyList");
 
+    const historyCountElement =
+        document.getElementById("historyCount");
 
-//
-// Pending drag operation.
-//
+    const undoButton =
+        document.getElementById("undoButton");
 
-let pendingOperation = null;
+    const resetButton =
+        document.getElementById("resetButton");
 
+    const addRowButton =
+        document.getElementById("addRowButton");
 
-const matrixElement =
-  document.getElementById("matrix");
+    const removeRowButton =
+        document.getElementById("removeRowButton");
 
-const historyElement =
-  document.getElementById("history");
+    const addColumnButton =
+        document.getElementById("addColumnButton");
 
-const overlay =
-  document.getElementById("overlay");
+    const removeColumnButton =
+        document.getElementById("removeColumnButton");
 
-const operationPreview =
-  document.getElementById("operation-preview");
+    const rowCountInput =
+        document.getElementById("rowCount");
 
-const coefficientInput =
-  document.getElementById("coefficient");
+    const columnCountInput =
+        document.getElementById("columnCount");
 
-const undoButton =
-  document.getElementById("undo");
+    const applySizeButton =
+        document.getElementById("applySizeButton");
 
+    const operationDialog =
+        document.getElementById("operationDialog");
 
-//
-// ============================================================
-// Utility
-// ============================================================
-//
+    const operationPreview =
+        document.getElementById("operationPreview");
 
-function cloneMatrix(source) {
+    const coefficientInput =
+        document.getElementById("coefficient");
 
-  return source.map(
-    row => [...row]
-  );
+    const coefficientError =
+        document.getElementById("coefficientError");
 
-}
+    const cancelOperationButton =
+        document.getElementById("cancelOperation");
 
+    const applyOperationButton =
+        document.getElementById("applyOperation");
 
-//
-// ============================================================
-// Render current matrix
-// ============================================================
-//
 
-function renderMatrix() {
+    // =============================================================
+    // INITIAL HISTORY
+    // =============================================================
 
-  matrixElement.innerHTML = "";
-
-
-  matrix.forEach(
-    (row, rowIndex) => {
-
-      const rowElement =
-        document.createElement("div");
-
-      rowElement.className =
-        "matrix-row";
-
-      rowElement.dataset.row =
-        rowIndex;
-
-
-      //
-      // Drag handle
-      //
-
-      const handle =
-        document.createElement("span");
-
-      handle.className =
-        "drag-handle";
-
-      handle.textContent =
-        "⠿";
-
-      handle.title =
-        "Drag row";
-
-      rowElement.appendChild(
-        handle
-      );
-
-
-      //
-      // Row label
-      //
-
-      const label =
-        document.createElement("span");
-
-      label.className =
-        "row-label";
-
-      label.textContent =
-        `R${rowIndex + 1}`;
-
-      rowElement.appendChild(
-        label
-      );
-
-
-      //
-      // Cells
-      //
-
-      const cells =
-        document.createElement("div");
-
-      cells.className =
-        "cells";
-
-
-      row.forEach(
-        (value, columnIndex) => {
-
-          //
-          // Augmented matrix separator.
-          //
-          // For now the final column is treated
-          // as the augmented column.
-          //
-
-          if (
-            columnIndex ===
-            row.length - 1
-          ) {
-
-            const separator =
-              document.createElement("span");
-
-            separator.className =
-              "augmented-bar";
-
-            cells.appendChild(
-              separator
-            );
-
-          }
-
-
-          const input =
-            document.createElement("input");
-
-          input.className =
-            "cell";
-
-          input.value =
-            value;
-
-          input.dataset.row =
-            rowIndex;
-
-          input.dataset.column =
-            columnIndex;
-
-
-          //
-          // Direct matrix editing.
-          //
-
-          input.addEventListener(
-            "change",
-            event => {
-
-              matrix[rowIndex][columnIndex] =
-                event.target.value.trim() ||
-                "0";
-
-              //
-              // Editing the current matrix isn't
-              // itself a row operation, so don't
-              // put it into the operation history.
-              //
-
-              updateUndoButton();
-
+    function initializeHistory() {
+        history = [
+            {
+                operation: "Start",
+                matrix: cloneMatrix(matrix)
             }
-          );
+        ];
+    }
 
 
-          cells.appendChild(
-            input
-          );
+    // =============================================================
+    // MATRIX HELPERS
+    // =============================================================
 
+    function cloneMatrix(source) {
+        return source.map(row => [...row]);
+    }
+
+
+    function normalizeNumber(value) {
+        const number = Number(value);
+
+        if (!Number.isFinite(number)) {
+            return 0;
         }
-      );
+
+        if (Math.abs(number) < 1e-10) {
+            return 0;
+        }
+
+        return number;
+    }
 
 
-      rowElement.appendChild(
-        cells
-      );
+    function parseCoefficient(value) {
+        const input = value.trim();
+
+        if (!input) {
+            return null;
+        }
+
+        // Fraction: a/b
+        if (input.includes("/")) {
+            const parts = input.split("/");
+
+            if (parts.length !== 2) {
+                return null;
+            }
+
+            const numerator = Number(parts[0].trim());
+            const denominator = Number(parts[1].trim());
+
+            if (
+                !Number.isFinite(numerator) ||
+                !Number.isFinite(denominator) ||
+                denominator === 0
+            ) {
+                return null;
+            }
+
+            return numerator / denominator;
+        }
+
+        const number = Number(input);
+
+        if (!Number.isFinite(number)) {
+            return null;
+        }
+
+        return number;
+    }
 
 
-      //
-      // ======================================================
-      // Drag and drop
-      // ======================================================
-      //
+    function formatNumber(value) {
+        value = normalizeNumber(value);
 
-      rowElement.draggable = true;
+        if (value === 0) {
+            return "0";
+        }
+
+        /*
+         * Try to display simple fractions when possible.
+         */
+        const sign = value < 0 ? -1 : 1;
+        const absolute = Math.abs(value);
+
+        for (let denominator = 1; denominator <= 1000; denominator++) {
+            const numerator = Math.round(
+                absolute * denominator
+            );
+
+            if (
+                Math.abs(
+                    absolute - numerator / denominator
+                ) < 1e-10
+            ) {
+                const signedNumerator =
+                    numerator * sign;
+
+                if (denominator === 1) {
+                    return String(signedNumerator);
+                }
+
+                return `${signedNumerator}/${denominator}`;
+            }
+        }
+
+        return Number(value.toFixed(6)).toString();
+    }
 
 
-      rowElement.addEventListener(
-        "dragstart",
-        event => {
+    function formatOperation(source, target, coefficient) {
+        const c = formatNumber(coefficient);
 
-          event.dataTransfer.effectAllowed =
-            "move";
+        if (coefficient === 1) {
+            return `R${target + 1} ← R${target + 1} + R${source + 1}`;
+        }
 
-          event.dataTransfer.setData(
+        if (coefficient === -1) {
+            return `R${target + 1} ← R${target + 1} − R${source + 1}`;
+        }
+
+        return `R${target + 1} ← R${target + 1} + ${c}R${source + 1}`;
+    }
+
+
+    // =============================================================
+    // MATRIX RENDERING
+    // =============================================================
+
+    function renderMatrix() {
+
+        matrixElement.innerHTML = "";
+
+        matrix.forEach((row, rowIndex) => {
+
+            const rowElement =
+                document.createElement("div");
+
+            rowElement.className = "matrix-row";
+            rowElement.draggable = true;
+            rowElement.dataset.rowIndex = rowIndex;
+
+            const handle =
+                document.createElement("div");
+
+            handle.className = "row-handle";
+            handle.textContent = "⠿";
+            handle.title = "Drag this row";
+
+            rowElement.appendChild(handle);
+
+            row.forEach((value, columnIndex) => {
+
+                if (
+                    columnIndex === row.length - 1
+                ) {
+                    const separator =
+                        document.createElement("div");
+
+                    separator.className = "separator";
+
+                    rowElement.appendChild(separator);
+                }
+
+                const input =
+                    document.createElement("input");
+
+                input.className = "cell";
+                input.type = "text";
+                input.value = formatNumber(value);
+                input.dataset.row = rowIndex;
+                input.dataset.column = columnIndex;
+                input.autocomplete = "off";
+                input.spellcheck = false;
+
+                input.addEventListener(
+                    "change",
+                    handleCellChange
+                );
+
+                rowElement.appendChild(input);
+            });
+
+            // Drag events
+            rowElement.addEventListener(
+                "dragstart",
+                handleDragStart
+            );
+
+            rowElement.addEventListener(
+                "dragend",
+                handleDragEnd
+            );
+
+            rowElement.addEventListener(
+                "dragover",
+                handleDragOver
+            );
+
+            rowElement.addEventListener(
+                "dragleave",
+                handleDragLeave
+            );
+
+            rowElement.addEventListener(
+                "drop",
+                handleDrop
+            );
+
+            matrixElement.appendChild(rowElement);
+        });
+    }
+
+
+    function handleCellChange(event) {
+
+        const input = event.target;
+
+        const row =
+            Number(input.dataset.row);
+
+        const column =
+            Number(input.dataset.column);
+
+        const value =
+            Number(input.value);
+
+        if (!Number.isFinite(value)) {
+            input.value =
+                formatNumber(matrix[row][column]);
+
+            return;
+        }
+
+        matrix[row][column] = value;
+        input.value = formatNumber(value);
+    }
+
+
+    // =============================================================
+    // DRAG / DROP
+    // =============================================================
+
+    function handleDragStart(event) {
+
+        const rowElement =
+            event.currentTarget;
+
+        draggedRow =
+            Number(rowElement.dataset.rowIndex);
+
+        rowElement.classList.add("dragging");
+
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData(
             "text/plain",
-            String(rowIndex)
-          );
+            String(draggedRow)
+        );
+    }
 
-          rowElement.classList.add(
+
+    function handleDragEnd(event) {
+
+        event.currentTarget.classList.remove(
             "dragging"
-          );
+        );
 
+        document
+            .querySelectorAll(".drag-over")
+            .forEach(element => {
+                element.classList.remove("drag-over");
+            });
+
+        draggedRow = null;
+    }
+
+
+    function handleDragOver(event) {
+
+        event.preventDefault();
+
+        const target =
+            event.currentTarget;
+
+        const targetRow =
+            Number(target.dataset.rowIndex);
+
+        if (
+            draggedRow === null ||
+            draggedRow === targetRow
+        ) {
+            return;
         }
-      );
+
+        target.classList.add("drag-over");
+
+        event.dataTransfer.dropEffect = "move";
+    }
 
 
-      rowElement.addEventListener(
-        "dragend",
-        () => {
+    function handleDragLeave(event) {
 
-          rowElement.classList.remove(
-            "dragging"
-          );
+        event.currentTarget.classList.remove(
+            "drag-over"
+        );
+    }
 
+
+    function handleDrop(event) {
+
+        event.preventDefault();
+
+        const target =
+            event.currentTarget;
+
+        target.classList.remove("drag-over");
+
+        const targetRow =
+            Number(target.dataset.rowIndex);
+
+        if (
+            draggedRow === null ||
+            draggedRow === targetRow
+        ) {
+            return;
         }
-      );
+
+        pendingOperation = {
+            source: draggedRow,
+            target: targetRow
+        };
+
+        operationPreview.textContent =
+            `R${targetRow + 1} ← R${targetRow + 1} + cR${draggedRow + 1}`;
+
+        coefficientInput.value = "1";
+        coefficientError.hidden = true;
+        coefficientError.textContent = "";
+
+        operationDialog.showModal();
+
+        setTimeout(() => {
+            coefficientInput.focus();
+            coefficientInput.select();
+        }, 0);
+    }
 
 
-      rowElement.addEventListener(
-        "dragover",
-        event => {
+    // =============================================================
+    // APPLY ROW OPERATION
+    // =============================================================
 
-          const source =
-            Number(
-              event.dataTransfer.getData(
-                "text/plain"
-              )
+    function applyPendingOperation() {
+
+        if (!pendingOperation) {
+            return;
+        }
+
+        const coefficient =
+            parseCoefficient(
+                coefficientInput.value
             );
 
+        if (coefficient === null) {
 
-          //
-          // Can't operate on a row using
-          // itself as the source.
-          //
+            coefficientError.textContent =
+                "Enter a valid number or fraction, such as 2, -1, or 3/4.";
 
-          if (
-            source === rowIndex
-          ) {
+            coefficientError.hidden = false;
+
+            coefficientInput.focus();
+
             return;
-          }
-
-
-          event.preventDefault();
-
-
-          rowElement.classList.add(
-            "drag-target"
-          );
-
         }
-      );
 
+        const source =
+            pendingOperation.source;
 
-      rowElement.addEventListener(
-        "dragleave",
-        () => {
+        const target =
+            pendingOperation.target;
 
-          rowElement.classList.remove(
-            "drag-target"
-          );
+        const nextMatrix =
+            cloneMatrix(matrix);
 
+        for (
+            let column = 0;
+            column < nextMatrix[target].length;
+            column++
+        ) {
+            nextMatrix[target][column] =
+                normalizeNumber(
+                    nextMatrix[target][column] +
+                    coefficient *
+                    nextMatrix[source][column]
+                );
         }
-      );
 
+        matrix = nextMatrix;
 
-      rowElement.addEventListener(
-        "drop",
-        event => {
-
-          event.preventDefault();
-
-
-          rowElement.classList.remove(
-            "drag-target"
-          );
-
-
-          const source =
-            Number(
-              event.dataTransfer.getData(
-                "text/plain"
-              )
+        const operation =
+            formatOperation(
+                source,
+                target,
+                coefficient
             );
 
+        addHistoryEntry(
+            operation,
+            matrix
+        );
 
-          if (
-            !Number.isInteger(source) ||
-            source === rowIndex
-          ) {
+        renderMatrix();
 
-            return;
+        operationDialog.close();
 
-          }
+        pendingOperation = null;
+    }
 
 
-          openOperation(
-            source,
-            rowIndex
-          );
+    // =============================================================
+    // HISTORY
+    // =============================================================
 
+    function addHistoryEntry(
+        operation,
+        matrixState
+    ) {
+
+        /*
+         * If the user had previously jumped backwards,
+         * discard the future branch.
+         */
+        const currentIndex =
+            history.findIndex(
+                entry =>
+                    matricesEqual(
+                        entry.matrix,
+                        matrix
+                    )
+            );
+
+        if (currentIndex !== -1) {
+            history =
+                history.slice(
+                    0,
+                    currentIndex + 1
+                );
         }
-      );
 
+        history.push({
+            operation,
+            matrix: cloneMatrix(matrixState)
+        });
 
-      matrixElement.appendChild(
-        rowElement
-      );
+        renderHistory();
 
+        /*
+         * Keep the newest operation visible.
+         */
+        requestAnimationFrame(() => {
+            historyListElement.scrollTop =
+                historyListElement.scrollHeight;
+        });
     }
-  );
-
-}
 
 
-//
-// ============================================================
-// Number parsing
-// ============================================================
-//
+    function renderHistory() {
 
-function parseNumber(value) {
+        historyListElement.innerHTML = "";
 
-  value =
-    String(value).trim();
+        const operationCount =
+            Math.max(0, history.length - 1);
+
+        historyCountElement.textContent =
+            operationCount === 1
+                ? "1 operation"
+                : `${operationCount} operations`;
+
+        if (history.length === 0) {
+            return;
+        }
+
+        const currentIndex =
+            history.length - 1;
+
+        history.forEach((entry, index) => {
+
+            const item =
+                document.createElement("div");
+
+            item.className = "history-item";
+
+            if (index === currentIndex) {
+                item.classList.add("current");
+            }
+
+            const title =
+                document.createElement("div");
+
+            title.className = "history-item-title";
+
+            const operation =
+                document.createElement("div");
+
+            operation.className =
+                "history-operation";
+
+            operation.textContent =
+                entry.operation;
+
+            const state =
+                document.createElement("div");
+
+            state.className =
+                "history-state";
+
+            state.textContent =
+                index === 0
+                    ? "Initial"
+                    : `Step ${index}`;
+
+            title.appendChild(operation);
+            title.appendChild(state);
+
+            item.appendChild(title);
+
+            const miniMatrix =
+                createMiniMatrix(entry.matrix);
+
+            item.appendChild(miniMatrix);
+
+            item.addEventListener(
+                "click",
+                () => restoreHistory(index)
+            );
+
+            historyListElement.appendChild(item);
+        });
+    }
 
 
-  //
-  // Fractions such as:
-  //
-  // 1/2
-  // -3/4
-  //
+    function createMiniMatrix(state) {
 
-  if (
-    value.includes("/")
-  ) {
+        const container =
+            document.createElement("div");
 
-    const parts =
-      value.split("/");
+        container.className = "mini-matrix";
+
+        state.forEach(row => {
+
+            const rowElement =
+                document.createElement("div");
+
+            rowElement.className = "mini-row";
+
+            row.forEach(
+                (value, columnIndex) => {
+
+                    if (
+                        columnIndex ===
+                        row.length - 1
+                    ) {
+                        const separator =
+                            document.createElement(
+                                "div"
+                            );
+
+                        separator.className =
+                            "mini-separator";
+
+                        rowElement.appendChild(
+                            separator
+                        );
+                    }
+
+                    const cell =
+                        document.createElement("div");
+
+                    cell.className =
+                        "mini-cell";
+
+                    cell.textContent =
+                        formatNumber(value);
+
+                    rowElement.appendChild(cell);
+                }
+            );
+
+            container.appendChild(rowElement);
+        });
+
+        return container;
+    }
 
 
-    if (
-      parts.length !== 2
+    function restoreHistory(index) {
+
+        if (
+            index < 0 ||
+            index >= history.length
+        ) {
+            return;
+        }
+
+        const entry = history[index];
+
+        if (index === history.length - 1) {
+            return;
+        }
+
+        const confirmed =
+            index === 0
+                ? confirm(
+                    "Restore the initial matrix? This will discard all later operations."
+                )
+                : true;
+
+        if (!confirmed) {
+            return;
+        }
+
+        matrix =
+            cloneMatrix(entry.matrix);
+
+        history =
+            history.slice(
+                0,
+                index + 1
+            );
+
+        renderMatrix();
+        renderHistory();
+        updateUndoButton();
+    }
+
+
+    function matricesEqual(a, b) {
+
+        if (a.length !== b.length) {
+            return false;
+        }
+
+        for (let row = 0; row < a.length; row++) {
+
+            if (
+                a[row].length !==
+                b[row].length
+            ) {
+                return false;
+            }
+
+            for (
+                let column = 0;
+                column < a[row].length;
+                column++
+            ) {
+
+                if (
+                    Math.abs(
+                        a[row][column] -
+                        b[row][column]
+                    ) > 1e-10
+                ) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+
+    // =============================================================
+    // UNDO
+    // =============================================================
+
+    function undo() {
+
+        if (history.length <= 1) {
+            return;
+        }
+
+        history.pop();
+
+        const previous =
+            history[history.length - 1];
+
+        matrix =
+            cloneMatrix(previous.matrix);
+
+        renderMatrix();
+        renderHistory();
+        updateUndoButton();
+    }
+
+
+    function updateUndoButton() {
+
+        undoButton.disabled =
+            history.length <= 1;
+    }
+
+
+    // =============================================================
+    // MATRIX SIZE
+    // =============================================================
+
+    function resizeMatrix(
+        rows,
+        columns
     ) {
 
-      return null;
+        rows = Math.max(
+            1,
+            Math.min(20, rows)
+        );
 
+        columns = Math.max(
+            2,
+            Math.min(20, columns)
+        );
+
+        const nextMatrix = [];
+
+        for (let row = 0; row < rows; row++) {
+
+            const nextRow = [];
+
+            for (
+                let column = 0;
+                column < columns;
+                column++
+            ) {
+
+                if (
+                    matrix[row] &&
+                    matrix[row][column] !== undefined
+                ) {
+                    nextRow.push(
+                        matrix[row][column]
+                    );
+                } else {
+                    nextRow.push(0);
+                }
+            }
+
+            nextMatrix.push(nextRow);
+        }
+
+        matrix = nextMatrix;
+
+        rowCountInput.value = rows;
+        columnCountInput.value = columns;
+
+        initializeHistory();
+
+        renderMatrix();
+        renderHistory();
+        updateUndoButton();
     }
 
 
-    const numerator =
-      Number(parts[0]);
+    // =============================================================
+    // ROW / COLUMN CONTROLS
+    // =============================================================
 
-    const denominator =
-      Number(parts[1]);
+    function addRow() {
 
+        const columns =
+            matrix[0]?.length ?? 2;
 
-    if (
-      !Number.isFinite(numerator) ||
-      !Number.isFinite(denominator) ||
-      denominator === 0
-    ) {
+        matrix.push(
+            Array(columns).fill(0)
+        );
 
-      return null;
+        initializeHistory();
 
+        renderMatrix();
+        renderHistory();
+        updateUndoButton();
     }
 
 
-    return numerator / denominator;
+    function removeRow() {
 
-  }
+        if (matrix.length <= 1) {
+            return;
+        }
 
+        matrix.pop();
 
-  const number =
-    Number(value);
+        initializeHistory();
 
-
-  return Number.isFinite(number)
-    ? number
-    : null;
-
-}
-
-
-//
-// ============================================================
-// Number formatting
-// ============================================================
-//
-
-function formatNumber(number) {
-
-  if (
-    Math.abs(number) < 1e-10
-  ) {
-
-    return "0";
-
-  }
-
-
-  if (
-    Number.isInteger(number)
-  ) {
-
-    return String(number);
-
-  }
-
-
-  //
-  // Look for a reasonably small
-  // exact fraction.
-  //
-
-  for (
-    let denominator = 2;
-    denominator <= 1000;
-    denominator++
-  ) {
-
-    const numerator =
-      Math.round(
-        number * denominator
-      );
-
-
-    if (
-      Math.abs(
-        number -
-        numerator / denominator
-      ) < 1e-10
-    ) {
-
-      return `${numerator}/${denominator}`;
-
+        renderMatrix();
+        renderHistory();
+        updateUndoButton();
     }
 
-  }
 
+    function addColumn() {
 
-  return Number(
-    number.toFixed(8)
-  ).toString();
+        matrix.forEach(row => {
+            row.push(0);
+        });
 
-}
+        initializeHistory();
 
-
-//
-// ============================================================
-// Open operation dialog
-// ============================================================
-//
-
-function openOperation(
-  sourceRow,
-  targetRow
-) {
-
-  pendingOperation = {
-    sourceRow,
-    targetRow
-  };
-
-
-  operationPreview.textContent =
-    `R${targetRow + 1} ← R${targetRow + 1} + c·R${sourceRow + 1}`;
-
-
-  coefficientInput.value =
-    "-1";
-
-
-  overlay.style.display =
-    "flex";
-
-
-  coefficientInput.focus();
-
-  coefficientInput.select();
-
-}
-
-
-//
-// ============================================================
-// Apply operation
-// ============================================================
-//
-
-function applyOperation() {
-
-  if (
-    !pendingOperation
-  ) {
-
-    return;
-
-  }
-
-
-  const coefficient =
-    parseNumber(
-      coefficientInput.value
-    );
-
-
-  if (
-    coefficient === null
-  ) {
-
-    coefficientInput.focus();
-
-    return;
-
-  }
-
-
-  const {
-    sourceRow,
-    targetRow
-  } = pendingOperation;
-
-
-  const source =
-    matrix[sourceRow].map(
-      parseNumber
-    );
-
-  const target =
-    matrix[targetRow].map(
-      parseNumber
-    );
-
-
-  //
-  // Don't perform arithmetic on
-  // invalid matrix entries.
-  //
-
-  if (
-    source.some(
-      value => value === null
-    ) ||
-
-    target.some(
-      value => value === null
-    )
-  ) {
-
-    alert(
-      "Every matrix entry must be a number before applying an operation."
-    );
-
-    return;
-
-  }
-
-
-  //
-  // The actual elementary row operation:
-  //
-  // R_target <- R_target + c R_source
-  //
-
-  matrix[targetRow] =
-    target.map(
-      (value, index) => {
-
-        return formatNumber(
-          value +
-          coefficient *
-          source[index]
-        );
-
-      }
-    );
-
-
-  //
-  // Human-readable operation.
-  //
-
-  const sign =
-    coefficient >= 0
-      ? "+"
-      : "−";
-
-
-  const absoluteCoefficient =
-    formatNumber(
-      Math.abs(coefficient)
-    );
-
-
-  const operation =
-    `R${targetRow + 1} ← R${targetRow + 1} ${sign} ${absoluteCoefficient}R${sourceRow + 1}`;
-
-
-  //
-  // IMPORTANT:
-  //
-  // Save the complete resulting matrix.
-  //
-  // This is what lets us later restore the
-  // calculation to any previous point.
-  //
-
-  history.push({
-    operation,
-
-    matrix:
-      cloneMatrix(matrix)
-  });
-
-
-  pendingOperation =
-    null;
-
-
-  overlay.style.display =
-    "none";
-
-
-  renderMatrix();
-
-  renderHistory();
-
-  updateUndoButton();
-
-}
-
-
-//
-// ============================================================
-// Undo
-// ============================================================
-//
-
-function undo() {
-
-  if (
-    history.length === 0
-  ) {
-
-    return;
-
-  }
-
-
-  //
-  // Remove the latest operation.
-  //
-
-  history.pop();
-
-
-  //
-  // Restore the matrix from the
-  // previous history entry.
-  //
-  // If there isn't one, restore
-  // the original matrix.
-  //
-
-  if (
-    history.length === 0
-  ) {
-
-    matrix =
-      cloneMatrix(
-        initialMatrix
-      );
-
-  } else {
-
-    matrix =
-      cloneMatrix(
-        history[
-          history.length - 1
-        ].matrix
-      );
-
-  }
-
-
-  renderMatrix();
-
-  renderHistory();
-
-  updateUndoButton();
-
-}
-
-
-//
-// ============================================================
-// Undo button state
-// ============================================================
-//
-
-function updateUndoButton() {
-
-  undoButton.disabled =
-    history.length === 0;
-
-}
-
-
-//
-// ============================================================
-// History rendering
-// ============================================================
-//
-
-function renderHistory() {
-
-  historyElement.innerHTML = "";
-
-
-  //
-  // Initial state
-  //
-
-  const initialStep =
-    document.createElement("div");
-
-  initialStep.className =
-    "step initial-step";
-
-
-  const initialHeader =
-    document.createElement("div");
-
-  initialHeader.className =
-    "step-header";
-
-
-  initialHeader.innerHTML =
-    `<span class="step-number">Start</span>`;
-
-
-  initialStep.appendChild(
-    initialHeader
-  );
-
-
-  const initialOperation =
-    document.createElement("div");
-
-  initialOperation.className =
-    "step-operation";
-
-  initialOperation.textContent =
-    "Initial matrix";
-
-  initialStep.appendChild(
-    initialOperation
-  );
-
-
-  const initialMatrixView =
-    createMiniMatrix(
-      initialMatrix
-    );
-
-  initialStep.appendChild(
-    initialMatrixView
-  );
-
-
-  //
-  // Clicking Start restores the
-  // calculation completely.
-  //
-
-  initialStep.addEventListener(
-    "click",
-    () => {
-
-      if (
-        history.length === 0
-      ) {
-
-        return;
-
-      }
-
-
-      if (
-        !confirm(
-          "Restore the calculation to the initial matrix? Later operations will be removed."
-        )
-      ) {
-
-        return;
-
-      }
-
-
-      history = [];
-
-      matrix =
-        cloneMatrix(
-          initialMatrix
-        );
-
-
-      renderMatrix();
-
-      renderHistory();
-
-      updateUndoButton();
-
+        renderMatrix();
+        renderHistory();
+        updateUndoButton();
     }
-  );
 
 
-  historyElement.appendChild(
-    initialStep
-  );
+    function removeColumn() {
+
+        if (
+            matrix[0] &&
+            matrix[0].length <= 2
+        ) {
+            return;
+        }
+
+        matrix.forEach(row => {
+            row.pop();
+        });
+
+        initializeHistory();
+
+        renderMatrix();
+        renderHistory();
+        updateUndoButton();
+    }
 
 
-  //
-  // Every operation.
-  //
+    // =============================================================
+    // RESET
+    // =============================================================
 
-  history.forEach(
-    (entry, index) => {
+    function reset() {
 
-      const step =
-        document.createElement("div");
+        const confirmed =
+            confirm(
+                "Reset the matrix and operation history?"
+            );
 
-      step.className =
-        "step";
+        if (!confirmed) {
+            return;
+        }
 
+        matrix = [
+            [1, 2, 3, 4],
+            [2, 5, 7, 9],
+            [1, 1, 2, 3]
+        ];
 
-      //
-      // Last entry is the current state.
-      //
+        rowCountInput.value = 3;
+        columnCountInput.value = 4;
 
-      if (
-        index === history.length - 1
-      ) {
+        initializeHistory();
 
-        step.classList.add(
-          "current"
-        );
-
-      }
-
-
-      const header =
-        document.createElement("div");
-
-      header.className =
-        "step-header";
+        renderMatrix();
+        renderHistory();
+        updateUndoButton();
+    }
 
 
-      header.innerHTML = `
-        <span class="step-number">
-          Step ${index + 1}
-        </span>
+    // =============================================================
+    // KEYBOARD SHORTCUTS
+    // =============================================================
 
-        <span>
-          ${index === history.length - 1
-            ? "Current"
-            : ""}
-        </span>
-      `;
+    document.addEventListener(
+        "keydown",
+        event => {
 
+            const modifier =
+                event.ctrlKey ||
+                event.metaKey;
 
-      step.appendChild(
-        header
-      );
+            if (
+                modifier &&
+                event.key.toLowerCase() === "z"
+            ) {
 
+                /*
+                 * Don't steal Ctrl+Z while the user
+                 * is editing an input.
+                 */
+                const active =
+                    document.activeElement;
 
-      const operation =
-        document.createElement("div");
+                const editing =
+                    active &&
+                    (
+                        active.tagName === "INPUT" ||
+                        active.tagName === "TEXTAREA"
+                    );
 
-      operation.className =
-        "step-operation";
+                if (editing) {
+                    return;
+                }
 
-      operation.textContent =
-        entry.operation;
+                event.preventDefault();
 
-
-      step.appendChild(
-        operation
-      );
-
-
-      const miniMatrix =
-        createMiniMatrix(
-          entry.matrix
-        );
-
-
-      step.appendChild(
-        miniMatrix
-      );
-
-
-      //
-      // If this is not the current step,
-      // tell the user that clicking it
-      // restores that point.
-      //
-
-      if (
-        index <
-        history.length - 1
-      ) {
-
-        const note =
-          document.createElement("div");
-
-        note.className =
-          "restore-note";
-
-        note.textContent =
-          "Click to restore this point";
+                undo();
+            }
+        }
+    );
 
 
-        step.appendChild(
-          note
-        );
+    // =============================================================
+    // EVENT LISTENERS
+    // =============================================================
 
-      }
+    undoButton.addEventListener(
+        "click",
+        undo
+    );
 
+    resetButton.addEventListener(
+        "click",
+        reset
+    );
 
-      //
-      // Restore this point in history.
-      //
+    addRowButton.addEventListener(
+        "click",
+        addRow
+    );
 
-      step.addEventListener(
+    removeRowButton.addEventListener(
+        "click",
+        removeRow
+    );
+
+    addColumnButton.addEventListener(
+        "click",
+        addColumn
+    );
+
+    removeColumnButton.addEventListener(
+        "click",
+        removeColumn
+    );
+
+    applySizeButton.addEventListener(
         "click",
         () => {
 
-          if (
-            index ===
-            history.length - 1
-          ) {
-
-            return;
-
-          }
-
-
-          //
-          // Keep operations through
-          // this step and discard
-          // everything after it.
-          //
-
-          history =
-            history.slice(
-              0,
-              index + 1
+            resizeMatrix(
+                Number(rowCountInput.value),
+                Number(columnCountInput.value)
             );
-
-
-          matrix =
-            cloneMatrix(
-              history[index].matrix
-            );
-
-
-          renderMatrix();
-
-          renderHistory();
-
-          updateUndoButton();
-
         }
-      );
+    );
 
 
-      historyElement.appendChild(
-        step
-      );
-
-    }
-  );
-
-}
-
-
-//
-// ============================================================
-// Mini matrix used by the history
-// ============================================================
-//
-
-function createMiniMatrix(
-  source
-) {
-
-  const container =
-    document.createElement("div");
-
-  container.className =
-    "mini-matrix";
-
-
-  source.forEach(
-    row => {
-
-      const rowElement =
-        document.createElement("div");
-
-      rowElement.className =
-        "mini-row";
-
-
-      row.forEach(
-        (value, index) => {
-
-          if (
-            index ===
-            row.length - 1
-          ) {
-
-            const bar =
-              document.createElement("span");
-
-            bar.className =
-              "mini-bar";
-
-            rowElement.appendChild(
-              bar
-            );
-
-          }
-
-
-          const cell =
-            document.createElement("span");
-
-          cell.className =
-            "mini-cell";
-
-          cell.textContent =
-            value;
-
-          rowElement.appendChild(
-            cell
-          );
-
+    cancelOperationButton.addEventListener(
+        "click",
+        () => {
+            operationDialog.close();
+            pendingOperation = null;
         }
-      );
+    );
 
 
-      container.appendChild(
-        rowElement
-      );
+    applyOperationButton.addEventListener(
+        "click",
+        applyPendingOperation
+    );
 
-    }
-  );
 
+    coefficientInput.addEventListener(
+        "keydown",
+        event => {
 
-  return container;
+            if (event.key === "Enter") {
+                event.preventDefault();
+                applyPendingOperation();
+            }
 
-}
+            if (event.key === "Escape") {
+                operationDialog.close();
+                pendingOperation = null;
+            }
+        }
+    );
 
 
-//
-// ============================================================
-// Keyboard undo
-// ============================================================
-//
+    // =============================================================
+    // INITIAL RENDER
+    // =============================================================
 
-document.addEventListener(
-  "keydown",
-  event => {
+    initializeHistory();
 
-    const modifier =
-      event.ctrlKey ||
-      event.metaKey;
-
-
-    if (
-      modifier &&
-      event.key.toLowerCase() === "z"
-    ) {
-
-      //
-      // Don't intercept undo while
-      // editing a matrix cell or
-      // coefficient.
-      //
-
-      const element =
-        document.activeElement;
-
-
-      const isInput =
-        element &&
-        (
-          element.tagName === "INPUT" ||
-          element.tagName === "TEXTAREA"
-        );
-
-
-      if (
-        isInput
-      ) {
-
-        return;
-
-      }
-
-
-      event.preventDefault();
-
-      undo();
-
-    }
-
-  }
-);
-
-
-// ============================================================
-// Dialog controls
-// ============================================================
-
-document
-  .getElementById("apply")
-  .addEventListener(
-    "click",
-    applyOperation
-  );
-
-
-document
-  .getElementById("cancel")
-  .addEventListener(
-    "click",
-    () => {
-
-      pendingOperation =
-        null;
-
-      overlay.style.display =
-        "none";
-
-    }
-  );
-
-
-coefficientInput.addEventListener(
-  "keydown",
-  event => {
-
-    if (
-      event.key === "Enter"
-    ) {
-
-      applyOperation();
-
-    }
-
-
-    if (
-      event.key === "Escape"
-    ) {
-
-      pendingOperation =
-        null;
-
-      overlay.style.display =
-        "none";
-
-    }
-
-  }
-);
-
-
-// ============================================================
-// Matrix size controls
-// ============================================================
-
-document
-  .getElementById("add-row")
-  .addEventListener(
-    "click",
-    () => {
-
-      matrix.push(
-        Array(
-          matrix[0].length
-        ).fill("0")
-      );
-
-      renderMatrix();
-
-    }
-  );
-
-
-document
-  .getElementById("remove-row")
-  .addEventListener(
-    "click",
-    () => {
-
-      if (
-        matrix.length <= 1
-      ) {
-
-        return;
-
-      }
-
-      matrix.pop();
-
-      renderMatrix();
-
-    }
-  );
-
-
-document
-  .getElementById("add-column")
-  .addEventListener(
-    "click",
-    () => {
-
-      matrix.forEach(
-        row => row.push("0")
-      );
-
-      renderMatrix();
-
-    }
-  );
-
-
-document
-  .getElementById("remove-column")
-  .addEventListener(
-    "click",
-    () => {
-
-      if (
-        matrix[0].length <= 2
-      ) {
-
-        return;
-
-      }
-
-      matrix.forEach(
-        row => row.pop()
-      );
-
-      renderMatrix();
-
-    }
-  );
-
-
-document
-  .getElementById("reset")
-  .addEventListener(
-    "click",
-    () => {
-
-      if (
-        history.length > 0 &&
-        !confirm(
-          "Reset the entire calculation?"
-        )
-      ) {
-
-        return;
-
-      }
-
-
-      matrix =
-        cloneMatrix(
-          initialMatrix
-        );
-
-      history = [];
-
-
-      renderMatrix();
-
-      renderHistory();
-
-      updateUndoButton();
-
-    }
-  );
-
-
-// ============================================================
-// Initial render
-// ============================================================
-
-renderMatrix();
-
-renderHistory();
-
-updateUndoButton();
+    renderMatrix();
+    renderHistory();
+    updateUndoButton();
 
 </script>
 
