@@ -24,7 +24,7 @@
     header {
       background: white;
       border-bottom: 1px solid #e2e7ef;
-      padding: 28px 32px;
+      padding: 26px 32px;
     }
 
     h1 {
@@ -38,12 +38,12 @@
     }
 
     main {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 28px auto;
       padding: 0 20px;
 
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 320px;
+      grid-template-columns: minmax(0, 1fr) 390px;
       gap: 24px;
     }
 
@@ -55,8 +55,13 @@
       box-shadow: 0 4px 18px rgba(20, 30, 50, 0.05);
     }
 
+    /* ---------------------------------------------------------
+       Toolbar
+    --------------------------------------------------------- */
+
     .toolbar {
       display: flex;
+      align-items: center;
       gap: 8px;
       flex-wrap: wrap;
       margin-bottom: 20px;
@@ -71,8 +76,13 @@
       cursor: pointer;
     }
 
-    button:hover {
+    button:hover:not(:disabled) {
       background: #f4f6fa;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
     }
 
     button.primary {
@@ -81,14 +91,41 @@
       border-color: #172033;
     }
 
+    button.undo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      font-weight: 600;
+
+      background: #fff;
+      border-color: #bfc7d6;
+    }
+
+    button.undo:not(:disabled):hover {
+      background: #f0f2f7;
+    }
+
     button.danger {
       color: #b42318;
     }
+
+    .separator {
+      width: 1px;
+      height: 28px;
+      background: #e2e7ef;
+      margin: 0 4px;
+    }
+
+    /* ---------------------------------------------------------
+       Matrix
+    --------------------------------------------------------- */
 
     .matrix {
       display: flex;
       flex-direction: column;
       gap: 8px;
+
       overflow-x: auto;
       padding: 10px 2px;
     }
@@ -99,10 +136,11 @@
       gap: 8px;
 
       padding: 7px 8px;
+
       border-radius: 10px;
+      border: 1px solid transparent;
 
       background: #fafbfe;
-      border: 1px solid transparent;
 
       transition:
         background 120ms ease,
@@ -110,12 +148,6 @@
         opacity 120ms ease;
     }
 
-    /*
-      This is the important bit.
-
-      The entire row can be dragged, but the handle gives
-      the user a clear thing to grab.
-    */
     .matrix-row.dragging {
       opacity: 0.4;
     }
@@ -127,9 +159,12 @@
 
     .drag-handle {
       width: 28px;
+
       color: #98a2b3;
+
       cursor: grab;
       user-select: none;
+
       font-size: 18px;
       text-align: center;
     }
@@ -140,8 +175,10 @@
 
     .row-label {
       width: 30px;
+
       color: #667085;
       font-weight: 700;
+
       user-select: none;
     }
 
@@ -180,27 +217,97 @@
 
     .augmented-bar {
       height: 30px;
+
       border-left: 2px solid #667085;
+
       margin: 0 5px;
     }
 
     .hint {
       margin-top: 14px;
+
       color: #667085;
+
       font-size: 13px;
     }
 
-    .history {
+    /* ---------------------------------------------------------
+       History
+    --------------------------------------------------------- */
+
+    .history-title {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+
+      margin-bottom: 16px;
     }
 
-    .history-step {
-      padding: 11px 12px;
+    .history-title h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      max-height: calc(100vh - 180px);
+      overflow-y: auto;
+
+      padding-right: 3px;
+    }
+
+    .step {
+      border: 1px solid #e2e7ef;
+      border-radius: 10px;
+
+      overflow: hidden;
+
+      background: #fff;
+
+      cursor: pointer;
+
+      transition:
+        border-color 120ms ease,
+        box-shadow 120ms ease;
+    }
+
+    .step:hover {
+      border-color: #b8c0d0;
+      box-shadow: 0 3px 10px rgba(20, 30, 50, 0.06);
+    }
+
+    .step.current {
+      border-color: #8066e8;
+      box-shadow: 0 0 0 2px #8066e820;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 9px 11px;
 
       background: #f7f8fb;
-      border-radius: 8px;
+
+      font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        monospace;
+
+      font-size: 12px;
+    }
+
+    .step-number {
+      color: #667085;
+    }
+
+    .step-operation {
+      padding: 9px 11px 3px;
 
       font-family:
         ui-monospace,
@@ -209,6 +316,46 @@
         monospace;
 
       font-size: 13px;
+      font-weight: 600;
+    }
+
+    .mini-matrix {
+      padding: 8px 11px 11px;
+
+      overflow-x: auto;
+    }
+
+    .mini-row {
+      display: flex;
+      gap: 5px;
+
+      margin-bottom: 4px;
+
+      font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        monospace;
+
+      font-size: 12px;
+    }
+
+    .mini-cell {
+      min-width: 32px;
+      text-align: right;
+    }
+
+    .mini-bar {
+      border-left: 1px solid #667085;
+      margin: 0 2px;
+    }
+
+    .initial-step {
+      padding: 11px;
+    }
+
+    .initial-step .step-operation {
+      padding: 0 0 8px;
     }
 
     .empty-history {
@@ -216,15 +363,23 @@
       font-size: 14px;
     }
 
-    /*
-      Operation dialog
-    */
+    .restore-note {
+      padding: 7px 11px 10px;
+
+      color: #98a2b3;
+      font-size: 11px;
+    }
+
+    /* ---------------------------------------------------------
+       Operation dialog
+    --------------------------------------------------------- */
 
     .overlay {
       position: fixed;
       inset: 0;
 
       display: none;
+
       align-items: center;
       justify-content: center;
 
@@ -246,6 +401,7 @@
 
     .dialog h2 {
       margin: 0 0 8px;
+
       font-size: 19px;
     }
 
@@ -255,6 +411,7 @@
       padding: 13px;
 
       border-radius: 9px;
+
       background: #f7f4ff;
 
       font-family:
@@ -283,59 +440,128 @@
 
     .dialog-actions {
       display: flex;
+
       justify-content: flex-end;
+
       gap: 8px;
+
       margin-top: 20px;
     }
 
-    @media (max-width: 800px) {
+    @media (max-width: 850px) {
       main {
         grid-template-columns: 1fr;
+      }
+
+      .step-list {
+        max-height: none;
       }
     }
   </style>
 </head>
 
+
 <body>
 
 <header>
+
   <h1>Row Reduction Calculator</h1>
+
   <p>
     Drag one row onto another to perform an elementary row operation.
   </p>
+
 </header>
 
+
 <main>
+
+  <!-- ========================================================
+       Main matrix
+  ========================================================= -->
 
   <section class="card">
 
     <div class="toolbar">
-      <button id="add-row">+ Row</button>
-      <button id="remove-row">− Row</button>
 
-      <button id="add-column">+ Column</button>
-      <button id="remove-column">− Column</button>
+      <!-- Most important new control -->
 
-      <button id="reset" class="danger">Reset</button>
+      <button
+        id="undo"
+        class="undo"
+        disabled
+        title="Undo last operation (Ctrl+Z)"
+      >
+        ↶ Undo
+      </button>
+
+
+      <div class="separator"></div>
+
+
+      <button id="add-row">
+        + Row
+      </button>
+
+      <button id="remove-row">
+        − Row
+      </button>
+
+      <button id="add-column">
+        + Column
+      </button>
+
+      <button id="remove-column">
+        − Column
+      </button>
+
+
+      <div class="separator"></div>
+
+
+      <button id="reset" class="danger">
+        Reset
+      </button>
+
     </div>
+
 
     <div id="matrix" class="matrix"></div>
 
+
     <div class="hint">
+
       Grab the <strong>⠿</strong> handle and drag a row onto another row.
+
+      <br />
+
+      <strong>Ctrl+Z</strong> / <strong>⌘Z</strong> also undoes the last operation.
+
     </div>
 
   </section>
 
 
+  <!-- ========================================================
+       History
+  ========================================================= -->
+
   <aside class="card">
 
-    <h2>Operations</h2>
+    <div class="history-title">
 
-    <div id="history" class="history">
-      <div class="empty-history">
-        No operations yet.
-      </div>
+      <h2>
+        Operation history
+      </h2>
+
+    </div>
+
+
+    <div
+      id="history"
+      class="step-list"
+    >
+
     </div>
 
   </aside>
@@ -343,17 +569,30 @@
 </main>
 
 
-<!-- Operation dialog -->
+<!-- ==========================================================
+     Operation dialog
+=========================================================== -->
 
-<div id="overlay" class="overlay">
+<div
+  id="overlay"
+  class="overlay"
+>
 
   <div class="dialog">
 
-    <h2>Modify row</h2>
+    <h2>
+      Modify row
+    </h2>
 
-    <div id="operation-preview" class="operation-preview"></div>
+
+    <div
+      id="operation-preview"
+      class="operation-preview"
+    ></div>
+
 
     <label>
+
       Multiplier
 
       <br />
@@ -364,7 +603,9 @@
         value="-1"
         autocomplete="off"
       />
+
     </label>
+
 
     <div class="dialog-actions">
 
@@ -372,7 +613,10 @@
         Cancel
       </button>
 
-      <button id="apply" class="primary">
+      <button
+        id="apply"
+        class="primary"
+      >
         Apply
       </button>
 
@@ -386,7 +630,9 @@
 <script>
 
 //
+// ============================================================
 // Matrix state
+// ============================================================
 //
 
 const initialMatrix = [
@@ -395,13 +641,33 @@ const initialMatrix = [
   ["1", "1", "2", "3"]
 ];
 
-let matrix = initialMatrix.map(row => [...row]);
+
+//
+// The current matrix.
+//
+
+let matrix =
+  initialMatrix.map(row => [...row]);
+
+
+//
+// Every operation stores:
+//
+// {
+//   operation: "...",
+//   matrix: [...]
+//
+// }
+//
+// This means history isn't merely a list of strings.
+// It is a complete timeline of the calculation.
+//
 
 let history = [];
 
 
 //
-// Currently pending drag operation
+// Pending drag operation.
 //
 
 let pendingOperation = null;
@@ -422,293 +688,352 @@ const operationPreview =
 const coefficientInput =
   document.getElementById("coefficient");
 
+const undoButton =
+  document.getElementById("undo");
+
 
 //
-// Render the matrix
+// ============================================================
+// Utility
+// ============================================================
+//
+
+function cloneMatrix(source) {
+
+  return source.map(
+    row => [...row]
+  );
+
+}
+
+
+//
+// ============================================================
+// Render current matrix
+// ============================================================
 //
 
 function renderMatrix() {
 
   matrixElement.innerHTML = "";
 
-  matrix.forEach((row, rowIndex) => {
 
-    const rowElement =
-      document.createElement("div");
+  matrix.forEach(
+    (row, rowIndex) => {
 
-    rowElement.className = "matrix-row";
+      const rowElement =
+        document.createElement("div");
 
-    rowElement.dataset.row = rowIndex;
+      rowElement.className =
+        "matrix-row";
 
-
-    //
-    // Drag handle
-    //
-
-    const handle =
-      document.createElement("span");
-
-    handle.className = "drag-handle";
-
-    handle.textContent = "⠿";
-
-    handle.title = "Drag row";
-
-    rowElement.appendChild(handle);
-
-
-    //
-    // Row label
-    //
-
-    const label =
-      document.createElement("span");
-
-    label.className = "row-label";
-
-    label.textContent = `R${rowIndex + 1}`;
-
-    rowElement.appendChild(label);
-
-
-    //
-    // Cells
-    //
-
-    const cells =
-      document.createElement("div");
-
-    cells.className = "cells";
-
-
-    row.forEach((value, columnIndex) => {
-
-      //
-      // Draw augmented-matrix separator
-      // before the last column.
-      //
-
-      if (columnIndex === row.length - 1) {
-
-        const separator =
-          document.createElement("span");
-
-        separator.className =
-          "augmented-bar";
-
-        cells.appendChild(separator);
-      }
-
-
-      const input =
-        document.createElement("input");
-
-      input.className = "cell";
-
-      input.value = value;
-
-      input.dataset.row = rowIndex;
-      input.dataset.column = columnIndex;
+      rowElement.dataset.row =
+        rowIndex;
 
 
       //
-      // Allow direct editing.
+      // Drag handle
       //
 
-      input.addEventListener("change", event => {
+      const handle =
+        document.createElement("span");
 
-        matrix[rowIndex][columnIndex] =
-          event.target.value.trim() || "0";
+      handle.className =
+        "drag-handle";
 
-      });
+      handle.textContent =
+        "⠿";
 
+      handle.title =
+        "Drag row";
 
-      cells.appendChild(input);
-
-    });
-
-
-    rowElement.appendChild(cells);
-
-
-    //
-    // Drag events
-    //
-
-    rowElement.draggable = true;
+      rowElement.appendChild(
+        handle
+      );
 
 
-    rowElement.addEventListener(
-      "dragstart",
-      event => {
+      //
+      // Row label
+      //
 
-        event.dataTransfer.effectAllowed =
-          "move";
+      const label =
+        document.createElement("span");
 
-        event.dataTransfer.setData(
-          "text/plain",
-          String(rowIndex)
-        );
+      label.className =
+        "row-label";
 
-        rowElement.classList.add(
-          "dragging"
-        );
-      }
-    );
+      label.textContent =
+        `R${rowIndex + 1}`;
 
-
-    rowElement.addEventListener(
-      "dragend",
-      () => {
-
-        rowElement.classList.remove(
-          "dragging"
-        );
-
-      }
-    );
+      rowElement.appendChild(
+        label
+      );
 
 
-    rowElement.addEventListener(
-      "dragover",
-      event => {
+      //
+      // Cells
+      //
 
-        const source =
-          Number(
-            event.dataTransfer.getData(
-              "text/plain"
-            )
-          );
+      const cells =
+        document.createElement("div");
 
-        //
-        // Don't allow dragging onto itself.
-        //
-
-        if (source === rowIndex) {
-          return;
-        }
-
-        event.preventDefault();
-
-        rowElement.classList.add(
-          "drag-target"
-        );
-      }
-    );
+      cells.className =
+        "cells";
 
 
-    rowElement.addEventListener(
-      "dragleave",
-      () => {
+      row.forEach(
+        (value, columnIndex) => {
 
-        rowElement.classList.remove(
-          "drag-target"
-        );
+          //
+          // Augmented matrix separator.
+          //
+          // For now the final column is treated
+          // as the augmented column.
+          //
 
-      }
-    );
+          if (
+            columnIndex ===
+            row.length - 1
+          ) {
+
+            const separator =
+              document.createElement("span");
+
+            separator.className =
+              "augmented-bar";
+
+            cells.appendChild(
+              separator
+            );
+
+          }
 
 
-    rowElement.addEventListener(
-      "drop",
-      event => {
+          const input =
+            document.createElement("input");
 
-        event.preventDefault();
+          input.className =
+            "cell";
 
-        rowElement.classList.remove(
-          "drag-target"
-        );
+          input.value =
+            value;
+
+          input.dataset.row =
+            rowIndex;
+
+          input.dataset.column =
+            columnIndex;
 
 
-        const source =
-          Number(
-            event.dataTransfer.getData(
-              "text/plain"
-            )
+          //
+          // Direct matrix editing.
+          //
+
+          input.addEventListener(
+            "change",
+            event => {
+
+              matrix[rowIndex][columnIndex] =
+                event.target.value.trim() ||
+                "0";
+
+              //
+              // Editing the current matrix isn't
+              // itself a row operation, so don't
+              // put it into the operation history.
+              //
+
+              updateUndoButton();
+
+            }
           );
 
 
-        if (
-          !Number.isInteger(source) ||
-          source === rowIndex
-        ) {
-          return;
+          cells.appendChild(
+            input
+          );
+
         }
+      );
 
 
-        openOperation(
-          source,
-          rowIndex
-        );
-
-      }
-    );
+      rowElement.appendChild(
+        cells
+      );
 
 
-    matrixElement.appendChild(
-      rowElement
-    );
+      //
+      // ======================================================
+      // Drag and drop
+      // ======================================================
+      //
 
-  });
+      rowElement.draggable = true;
+
+
+      rowElement.addEventListener(
+        "dragstart",
+        event => {
+
+          event.dataTransfer.effectAllowed =
+            "move";
+
+          event.dataTransfer.setData(
+            "text/plain",
+            String(rowIndex)
+          );
+
+          rowElement.classList.add(
+            "dragging"
+          );
+
+        }
+      );
+
+
+      rowElement.addEventListener(
+        "dragend",
+        () => {
+
+          rowElement.classList.remove(
+            "dragging"
+          );
+
+        }
+      );
+
+
+      rowElement.addEventListener(
+        "dragover",
+        event => {
+
+          const source =
+            Number(
+              event.dataTransfer.getData(
+                "text/plain"
+              )
+            );
+
+
+          //
+          // Can't operate on a row using
+          // itself as the source.
+          //
+
+          if (
+            source === rowIndex
+          ) {
+            return;
+          }
+
+
+          event.preventDefault();
+
+
+          rowElement.classList.add(
+            "drag-target"
+          );
+
+        }
+      );
+
+
+      rowElement.addEventListener(
+        "dragleave",
+        () => {
+
+          rowElement.classList.remove(
+            "drag-target"
+          );
+
+        }
+      );
+
+
+      rowElement.addEventListener(
+        "drop",
+        event => {
+
+          event.preventDefault();
+
+
+          rowElement.classList.remove(
+            "drag-target"
+          );
+
+
+          const source =
+            Number(
+              event.dataTransfer.getData(
+                "text/plain"
+              )
+            );
+
+
+          if (
+            !Number.isInteger(source) ||
+            source === rowIndex
+          ) {
+
+            return;
+
+          }
+
+
+          openOperation(
+            source,
+            rowIndex
+          );
+
+        }
+      );
+
+
+      matrixElement.appendChild(
+        rowElement
+      );
+
+    }
+  );
 
 }
 
 
 //
-// Open operation dialog
-//
-
-function openOperation(
-  sourceRow,
-  targetRow
-) {
-
-  pendingOperation = {
-    sourceRow,
-    targetRow
-  };
-
-
-  operationPreview.textContent =
-    `R${targetRow + 1} ← R${targetRow + 1} + c·R${sourceRow + 1}`;
-
-
-  coefficientInput.value = "-1";
-
-  overlay.style.display = "flex";
-
-  coefficientInput.focus();
-
-  coefficientInput.select();
-
-}
-
-
-//
-// Parse numbers.
-//
-// For now we support:
-//
-// 2
-// -3
-// 0.5
-// 1/2
-// -3/4
+// ============================================================
+// Number parsing
+// ============================================================
 //
 
 function parseNumber(value) {
 
-  value = String(value).trim();
+  value =
+    String(value).trim();
 
 
-  if (value.includes("/")) {
+  //
+  // Fractions such as:
+  //
+  // 1/2
+  // -3/4
+  //
+
+  if (
+    value.includes("/")
+  ) {
 
     const parts =
       value.split("/");
 
-    if (parts.length !== 2) {
+
+    if (
+      parts.length !== 2
+    ) {
+
       return null;
+
     }
+
 
     const numerator =
       Number(parts[0]);
@@ -722,42 +1047,57 @@ function parseNumber(value) {
       !Number.isFinite(denominator) ||
       denominator === 0
     ) {
+
       return null;
+
     }
 
+
     return numerator / denominator;
+
   }
 
 
   const number =
     Number(value);
 
+
   return Number.isFinite(number)
     ? number
     : null;
+
 }
 
 
 //
-// Format a computed number.
-//
-// This is intentionally simple for the prototype.
+// ============================================================
+// Number formatting
+// ============================================================
 //
 
 function formatNumber(number) {
 
-  if (Math.abs(number) < 1e-10) {
+  if (
+    Math.abs(number) < 1e-10
+  ) {
+
     return "0";
+
   }
 
 
-  if (Number.isInteger(number)) {
+  if (
+    Number.isInteger(number)
+  ) {
+
     return String(number);
+
   }
 
 
   //
-  // Try to represent common fractions.
+  // Look for a reasonably small
+  // exact fraction.
   //
 
   for (
@@ -794,13 +1134,55 @@ function formatNumber(number) {
 
 
 //
-// Apply the operation
+// ============================================================
+// Open operation dialog
+// ============================================================
+//
+
+function openOperation(
+  sourceRow,
+  targetRow
+) {
+
+  pendingOperation = {
+    sourceRow,
+    targetRow
+  };
+
+
+  operationPreview.textContent =
+    `R${targetRow + 1} ← R${targetRow + 1} + c·R${sourceRow + 1}`;
+
+
+  coefficientInput.value =
+    "-1";
+
+
+  overlay.style.display =
+    "flex";
+
+
+  coefficientInput.focus();
+
+  coefficientInput.select();
+
+}
+
+
+//
+// ============================================================
+// Apply operation
+// ============================================================
 //
 
 function applyOperation() {
 
-  if (!pendingOperation) {
+  if (
+    !pendingOperation
+  ) {
+
     return;
+
   }
 
 
@@ -810,11 +1192,14 @@ function applyOperation() {
     );
 
 
-  if (coefficient === null) {
+  if (
+    coefficient === null
+  ) {
 
     coefficientInput.focus();
 
     return;
+
   }
 
 
@@ -836,13 +1221,18 @@ function applyOperation() {
 
 
   //
-  // Don't perform arithmetic on invalid
-  // matrix entries.
+  // Don't perform arithmetic on
+  // invalid matrix entries.
   //
 
   if (
-    source.some(value => value === null) ||
-    target.some(value => value === null)
+    source.some(
+      value => value === null
+    ) ||
+
+    target.some(
+      value => value === null
+    )
   ) {
 
     alert(
@@ -850,9 +1240,12 @@ function applyOperation() {
     );
 
     return;
+
   }
 
 
+  //
+  // The actual elementary row operation:
   //
   // R_target <- R_target + c R_source
   //
@@ -863,7 +1256,8 @@ function applyOperation() {
 
         return formatNumber(
           value +
-          coefficient * source[index]
+          coefficient *
+          source[index]
         );
 
       }
@@ -871,16 +1265,14 @@ function applyOperation() {
 
 
   //
-  // Human-readable operation
+  // Human-readable operation.
   //
-
-  const coefficientText =
-    formatNumber(coefficient);
 
   const sign =
     coefficient >= 0
       ? "+"
       : "−";
+
 
   const absoluteCoefficient =
     formatNumber(
@@ -888,56 +1280,391 @@ function applyOperation() {
     );
 
 
-  history.push(
-    `R${targetRow + 1} ← R${targetRow + 1} ${sign} ${absoluteCoefficient}R${sourceRow + 1}`
-  );
+  const operation =
+    `R${targetRow + 1} ← R${targetRow + 1} ${sign} ${absoluteCoefficient}R${sourceRow + 1}`;
 
 
-  pendingOperation = null;
+  //
+  // IMPORTANT:
+  //
+  // Save the complete resulting matrix.
+  //
+  // This is what lets us later restore the
+  // calculation to any previous point.
+  //
 
-  overlay.style.display = "none";
+  history.push({
+    operation,
+
+    matrix:
+      cloneMatrix(matrix)
+  });
+
+
+  pendingOperation =
+    null;
+
+
+  overlay.style.display =
+    "none";
+
 
   renderMatrix();
 
   renderHistory();
 
+  updateUndoButton();
+
 }
 
 
 //
-// Render history
+// ============================================================
+// Undo
+// ============================================================
+//
+
+function undo() {
+
+  if (
+    history.length === 0
+  ) {
+
+    return;
+
+  }
+
+
+  //
+  // Remove the latest operation.
+  //
+
+  history.pop();
+
+
+  //
+  // Restore the matrix from the
+  // previous history entry.
+  //
+  // If there isn't one, restore
+  // the original matrix.
+  //
+
+  if (
+    history.length === 0
+  ) {
+
+    matrix =
+      cloneMatrix(
+        initialMatrix
+      );
+
+  } else {
+
+    matrix =
+      cloneMatrix(
+        history[
+          history.length - 1
+        ].matrix
+      );
+
+  }
+
+
+  renderMatrix();
+
+  renderHistory();
+
+  updateUndoButton();
+
+}
+
+
+//
+// ============================================================
+// Undo button state
+// ============================================================
+//
+
+function updateUndoButton() {
+
+  undoButton.disabled =
+    history.length === 0;
+
+}
+
+
+//
+// ============================================================
+// History rendering
+// ============================================================
 //
 
 function renderHistory() {
 
-  if (history.length === 0) {
-
-    historyElement.innerHTML =
-      `<div class="empty-history">
-        No operations yet.
-      </div>`;
-
-    return;
-  }
-
-
   historyElement.innerHTML = "";
 
 
-  history.forEach(
-    (operation, index) => {
+  //
+  // Initial state
+  //
 
-      const element =
+  const initialStep =
+    document.createElement("div");
+
+  initialStep.className =
+    "step initial-step";
+
+
+  const initialHeader =
+    document.createElement("div");
+
+  initialHeader.className =
+    "step-header";
+
+
+  initialHeader.innerHTML =
+    `<span class="step-number">Start</span>`;
+
+
+  initialStep.appendChild(
+    initialHeader
+  );
+
+
+  const initialOperation =
+    document.createElement("div");
+
+  initialOperation.className =
+    "step-operation";
+
+  initialOperation.textContent =
+    "Initial matrix";
+
+  initialStep.appendChild(
+    initialOperation
+  );
+
+
+  const initialMatrixView =
+    createMiniMatrix(
+      initialMatrix
+    );
+
+  initialStep.appendChild(
+    initialMatrixView
+  );
+
+
+  //
+  // Clicking Start restores the
+  // calculation completely.
+  //
+
+  initialStep.addEventListener(
+    "click",
+    () => {
+
+      if (
+        history.length === 0
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        !confirm(
+          "Restore the calculation to the initial matrix? Later operations will be removed."
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      history = [];
+
+      matrix =
+        cloneMatrix(
+          initialMatrix
+        );
+
+
+      renderMatrix();
+
+      renderHistory();
+
+      updateUndoButton();
+
+    }
+  );
+
+
+  historyElement.appendChild(
+    initialStep
+  );
+
+
+  //
+  // Every operation.
+  //
+
+  history.forEach(
+    (entry, index) => {
+
+      const step =
         document.createElement("div");
 
-      element.className =
-        "history-step";
+      step.className =
+        "step";
 
-      element.textContent =
-        `${index + 1}. ${operation}`;
+
+      //
+      // Last entry is the current state.
+      //
+
+      if (
+        index === history.length - 1
+      ) {
+
+        step.classList.add(
+          "current"
+        );
+
+      }
+
+
+      const header =
+        document.createElement("div");
+
+      header.className =
+        "step-header";
+
+
+      header.innerHTML = `
+        <span class="step-number">
+          Step ${index + 1}
+        </span>
+
+        <span>
+          ${index === history.length - 1
+            ? "Current"
+            : ""}
+        </span>
+      `;
+
+
+      step.appendChild(
+        header
+      );
+
+
+      const operation =
+        document.createElement("div");
+
+      operation.className =
+        "step-operation";
+
+      operation.textContent =
+        entry.operation;
+
+
+      step.appendChild(
+        operation
+      );
+
+
+      const miniMatrix =
+        createMiniMatrix(
+          entry.matrix
+        );
+
+
+      step.appendChild(
+        miniMatrix
+      );
+
+
+      //
+      // If this is not the current step,
+      // tell the user that clicking it
+      // restores that point.
+      //
+
+      if (
+        index <
+        history.length - 1
+      ) {
+
+        const note =
+          document.createElement("div");
+
+        note.className =
+          "restore-note";
+
+        note.textContent =
+          "Click to restore this point";
+
+
+        step.appendChild(
+          note
+        );
+
+      }
+
+
+      //
+      // Restore this point in history.
+      //
+
+      step.addEventListener(
+        "click",
+        () => {
+
+          if (
+            index ===
+            history.length - 1
+          ) {
+
+            return;
+
+          }
+
+
+          //
+          // Keep operations through
+          // this step and discard
+          // everything after it.
+          //
+
+          history =
+            history.slice(
+              0,
+              index + 1
+            );
+
+
+          matrix =
+            cloneMatrix(
+              history[index].matrix
+            );
+
+
+          renderMatrix();
+
+          renderHistory();
+
+          updateUndoButton();
+
+        }
+      );
+
 
       historyElement.appendChild(
-        element
+        step
       );
 
     }
@@ -947,8 +1674,143 @@ function renderHistory() {
 
 
 //
-// Dialog controls
+// ============================================================
+// Mini matrix used by the history
+// ============================================================
 //
+
+function createMiniMatrix(
+  source
+) {
+
+  const container =
+    document.createElement("div");
+
+  container.className =
+    "mini-matrix";
+
+
+  source.forEach(
+    row => {
+
+      const rowElement =
+        document.createElement("div");
+
+      rowElement.className =
+        "mini-row";
+
+
+      row.forEach(
+        (value, index) => {
+
+          if (
+            index ===
+            row.length - 1
+          ) {
+
+            const bar =
+              document.createElement("span");
+
+            bar.className =
+              "mini-bar";
+
+            rowElement.appendChild(
+              bar
+            );
+
+          }
+
+
+          const cell =
+            document.createElement("span");
+
+          cell.className =
+            "mini-cell";
+
+          cell.textContent =
+            value;
+
+          rowElement.appendChild(
+            cell
+          );
+
+        }
+      );
+
+
+      container.appendChild(
+        rowElement
+      );
+
+    }
+  );
+
+
+  return container;
+
+}
+
+
+//
+// ============================================================
+// Keyboard undo
+// ============================================================
+//
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    const modifier =
+      event.ctrlKey ||
+      event.metaKey;
+
+
+    if (
+      modifier &&
+      event.key.toLowerCase() === "z"
+    ) {
+
+      //
+      // Don't intercept undo while
+      // editing a matrix cell or
+      // coefficient.
+      //
+
+      const element =
+        document.activeElement;
+
+
+      const isInput =
+        element &&
+        (
+          element.tagName === "INPUT" ||
+          element.tagName === "TEXTAREA"
+        );
+
+
+      if (
+        isInput
+      ) {
+
+        return;
+
+      }
+
+
+      event.preventDefault();
+
+      undo();
+
+    }
+
+  }
+);
+
+
+// ============================================================
+// Dialog controls
+// ============================================================
 
 document
   .getElementById("apply")
@@ -964,9 +1826,11 @@ document
     "click",
     () => {
 
-      pendingOperation = null;
+      pendingOperation =
+        null;
 
-      overlay.style.display = "none";
+      overlay.style.display =
+        "none";
 
     }
   );
@@ -976,15 +1840,24 @@ coefficientInput.addEventListener(
   "keydown",
   event => {
 
-    if (event.key === "Enter") {
+    if (
+      event.key === "Enter"
+    ) {
+
       applyOperation();
+
     }
 
-    if (event.key === "Escape") {
 
-      pendingOperation = null;
+    if (
+      event.key === "Escape"
+    ) {
 
-      overlay.style.display = "none";
+      pendingOperation =
+        null;
+
+      overlay.style.display =
+        "none";
 
     }
 
@@ -992,9 +1865,9 @@ coefficientInput.addEventListener(
 );
 
 
-//
+// ============================================================
 // Matrix size controls
-//
+// ============================================================
 
 document
   .getElementById("add-row")
@@ -1003,8 +1876,9 @@ document
     () => {
 
       matrix.push(
-        Array(matrix[0].length)
-          .fill("0")
+        Array(
+          matrix[0].length
+        ).fill("0")
       );
 
       renderMatrix();
@@ -1019,8 +1893,12 @@ document
     "click",
     () => {
 
-      if (matrix.length <= 1) {
+      if (
+        matrix.length <= 1
+      ) {
+
         return;
+
       }
 
       matrix.pop();
@@ -1053,8 +1931,12 @@ document
     "click",
     () => {
 
-      if (matrix[0].length <= 2) {
+      if (
+        matrix[0].length <= 2
+      ) {
+
         return;
+
       }
 
       matrix.forEach(
@@ -1073,26 +1955,45 @@ document
     "click",
     () => {
 
+      if (
+        history.length > 0 &&
+        !confirm(
+          "Reset the entire calculation?"
+        )
+      ) {
+
+        return;
+
+      }
+
+
       matrix =
-        initialMatrix.map(
-          row => [...row]
+        cloneMatrix(
+          initialMatrix
         );
 
       history = [];
 
+
       renderMatrix();
+
       renderHistory();
+
+      updateUndoButton();
 
     }
   );
 
 
-//
+// ============================================================
 // Initial render
-//
+// ============================================================
 
 renderMatrix();
+
 renderHistory();
+
+updateUndoButton();
 
 </script>
 
