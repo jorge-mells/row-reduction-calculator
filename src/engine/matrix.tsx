@@ -1,14 +1,38 @@
-export type Matrix = number[][]
+import Fraction from 'fraction.js'
+
+export type Matrix = Fraction[][]
 
 export function createMatrix(rows: number, columns: number): Matrix {
   return Array.from(
     { length: rows },
-    () => Array(columns).fill(0),
+    () =>
+      Array.from(
+        { length: columns },
+        () => new Fraction(0),
+      ),
+  )
+}
+
+export function resizeMatrix(
+  matrix: Matrix,
+  rows: number,
+  columns: number,
+): Matrix {
+  return Array.from(
+    { length: rows },
+    (_, rowIndex) =>
+      Array.from(
+        { length: columns },
+        (_, columnIndex) =>
+          matrix[rowIndex]?.[columnIndex] ?? new Fraction(0),
+      ),
   )
 }
 
 export function cloneMatrix(matrix: Matrix): Matrix {
-  return matrix.map((row) => [...row])
+  return matrix.map((row) =>
+    row.map((value) => new Fraction(value)),
+  )
 }
 
 export function matricesEqual(a: Matrix, b: Matrix): boolean {
@@ -22,7 +46,7 @@ export function matricesEqual(a: Matrix, b: Matrix): boolean {
 
   return a.every((row, rowIndex) =>
     row.every((value, columnIndex) =>
-      value === b[rowIndex][columnIndex],
+      value.equals(b[rowIndex][columnIndex]),
     ),
   )
 }

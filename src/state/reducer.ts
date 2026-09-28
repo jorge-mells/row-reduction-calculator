@@ -1,29 +1,45 @@
-import { cloneMatrix } from '../engine/matrix'
-import { applyRowOperation, type RowOperation } from '../engine/operations'
+import Fraction from 'fraction.js'
+import {
+  cloneMatrix,
+  resizeMatrix,
+  type Matrix,
+} from '../engine/matrix'
+import {
+  applyRowOperation,
+  type RowOperation,
+} from '../engine/operations'
 import type { AppState } from './appState'
 
 export type AppAction =
   | {
-      type: 'APPLY_OPERATION'
-      operation: RowOperation
-    }
+    type: 'APPLY_OPERATION'
+    operation: RowOperation
+  }
   | {
-      type: 'UNDO'
-    }
+    type: 'UNDO'
+  }
   | {
-      type: 'RESTORE_HISTORY'
-      index: number
-    }
+    type: 'REDO'
+  }
   | {
-      type: 'SET_CELL'
-      row: number
-      column: number
-      value: number
-    }
+    type: 'RESTORE_HISTORY'
+    index: number
+  }
   | {
-      type: 'RESET'
-      matrix: number[][]
-    }
+    type: 'SET_CELL'
+    row: number
+    column: number
+    value: Fraction
+  }
+  | {
+    type: 'RESET'
+    matrix: Matrix
+  }
+  | {
+    type: 'RESIZE_MATRIX'
+    rows: number
+    columns: number
+  }
 
 export function appReducer(
   state: AppState,
@@ -41,6 +57,7 @@ export function appReducer(
         {
           matrix: cloneMatrix(nextMatrix),
           operation: action.operation,
+          kind: 'operation' as const,
         },
       ]
 
@@ -65,6 +82,22 @@ export function appReducer(
           state.history[previousIndex].matrix,
         ),
         historyIndex: previousIndex,
+      }
+    }
+
+    case 'REDO': {
+      if (state.historyIndex === state.history.length - 1) {
+        return state
+      }
+
+      const nextIndex = state.historyIndex + 1
+
+      return {
+        ...state,
+        matrix: cloneMatrix(
+          state.history[nextIndex].matrix,
+        ),
+        historyIndex: nextIndex,
       }
     }
 
@@ -99,9 +132,37 @@ export function appReducer(
 
       matrix[action.row][action.column] = action.value
 
+      const currentEntry = state.history[state.historyIndex]
+
+      if (currentEntry.kind === 'edit') {
+        const history = [...state.history]
+
+        history[state.historyIndex] = {
+          ...currentEntry,
+          matrix: cloneMatrix(matrix),
+        }
+
+        return {
+          ...state,
+          matrix,
+          history,
+        }
+      }
+
+      const nextHistory = [
+        ...state.history.slice(0, state.historyIndex + 1),
+        {
+          matrix: cloneMatrix(matrix),
+          operation: null,
+          kind: 'edit' as const,
+        },
+      ]
+
       return {
         ...state,
         matrix,
+        history: nextHistory,
+        historyIndex: nextHistory.length - 1,
       }
     }
 
@@ -114,9 +175,43 @@ export function appReducer(
           {
             matrix: cloneMatrix(matrix),
             operation: null,
+            kind: 'initial',
           },
         ],
         historyIndex: 0,
+      }
+    }
+
+    case 'RESIZE_MATRIX': {
+      if (
+        !Number.isInteger(action.rows) ||
+        !Number.isInteger(action.columns) ||
+        action.rows < 1 ||
+        action.columns < 1
+      ) {
+        return state
+      }
+
+      const matrix = resizeMatrix(
+        state.matrix,
+        action.rows,
+        action.columns,
+      )
+
+      const nextHistory = [
+        ...state.history.slice(0, state.historyIndex + 1),
+        {
+          matrix: cloneMatrix(matrix),
+          operation: null,
+          kind: 'edit' as const,
+        },
+      ]
+
+      return {
+        ...state,
+        matrix,
+        history: nextHistory,
+        historyIndex: nextHistory.length - 1,
       }
     }
   }
