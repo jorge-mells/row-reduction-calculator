@@ -77,3 +77,34 @@ h1 {
   outline-offset: 1px;
   border-color: transparent;
 }
+
+.history-entry {
+  padding: 0.5rem;
+}
+
+.history-entry.active {
+  background: #dbeafe;
+}
+
+.history-entry.future {
+  opacity: 0.6;
+}
+
+.history-current {
+  margin-left: 0.5rem;
+  font-weight: 600;
+}
+
+.history-matrix {
+  margin-top: 0.5rem;
+}
+
+.history-matrix-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.history-matrix-cell {
+  min-width: 2.5rem;
+  text-align: center;
+}

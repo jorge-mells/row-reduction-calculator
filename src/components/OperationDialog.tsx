@@ -9,12 +9,21 @@ import type {
 } from 'react'
 import Fraction from 'fraction.js'
 import type { AppAction } from '../state/reducer'
+import type { RowOperation } from '../engine/operations'
+import {
+  isAtInputEnd,
+  isAtInputStart,
+  selectInputOnFocus,
+} from './inputNavigation'
 
 interface OperationDialogProps {
   source: number
   target?: number
   dispatch: Dispatch<AppAction>
-  onApply: (affectedRow: number) => void
+  onApply: (
+    operation: RowOperation,
+    affectedRow: number,
+  ) => void
   onClose: () => void
 }
 
@@ -43,6 +52,9 @@ function OperationDialog({
   const [sourceCoefficient, setSourceCoefficient] =
     useState('1')
 
+  const [focusOperationInput, setFocusOperationInput] =
+    useState(false)
+
   const coefficientRef =
     useRef<HTMLInputElement>(null)
 
@@ -55,6 +67,12 @@ function OperationDialog({
   const addRadioRef =
     useRef<HTMLInputElement>(null)
 
+  const swapRadioRef =
+    useRef<HTMLInputElement>(null)
+
+  const advancedRadioRef =
+    useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     if (singleRow) {
       coefficientRef.current?.focus()
@@ -62,23 +80,41 @@ function OperationDialog({
     }
 
     addRadioRef.current?.focus()
-  }, [singleRow])
+  }, [singleRow, source, target])
+
+  useEffect(() => {
+    if (!focusOperationInput) {
+      return
+    }
+
+    if (operationType === 'row-add') {
+      coefficientRef.current?.focus()
+    }
+
+    if (operationType === 'row-linear-combination') {
+      targetCoefficientRef.current?.focus()
+    }
+
+    setFocusOperationInput(false)
+  }, [operationType, focusOperationInput])
 
   function apply() {
     if (singleRow) {
       try {
         const value = new Fraction(coefficient)
 
+        const operation: RowOperation = {
+          type: 'row-scale',
+          row: source,
+          coefficient: value,
+        }
+
         dispatch({
           type: 'APPLY_OPERATION',
-          operation: {
-            type: 'row-scale',
-            row: source,
-            coefficient: value,
-          },
+          operation,
         })
 
-        onApply(source)
+        onApply(operation, source)
         onClose()
       } catch {
         return
@@ -88,16 +124,18 @@ function OperationDialog({
     }
 
     if (operationType === 'row-swap') {
+      const operation: RowOperation = {
+        type: 'row-swap',
+        first: source,
+        second: target,
+      }
+
       dispatch({
         type: 'APPLY_OPERATION',
-        operation: {
-          type: 'row-swap',
-          first: source,
-          second: target,
-        },
+        operation,
       })
 
-      onApply(target)
+      onApply(operation, target)
       onClose()
       return
     }
@@ -112,18 +150,20 @@ function OperationDialog({
           sourceCoefficient,
         )
 
+        const operation: RowOperation = {
+          type: 'row-linear-combination',
+          source,
+          target,
+          sourceCoefficient: sourceValue,
+          targetCoefficient: targetValue,
+        }
+
         dispatch({
           type: 'APPLY_OPERATION',
-          operation: {
-            type: 'row-linear-combination',
-            source,
-            target,
-            sourceCoefficient: sourceValue,
-            targetCoefficient: targetValue,
-          },
+          operation,
         })
 
-        onApply(target)
+        onApply(operation, target)
         onClose()
       } catch {
         return
@@ -135,21 +175,43 @@ function OperationDialog({
     try {
       const value = new Fraction(coefficient)
 
+      const operation: RowOperation = {
+        type: 'row-add',
+        source,
+        target,
+        coefficient: value,
+      }
+
       dispatch({
         type: 'APPLY_OPERATION',
-        operation: {
-          type: 'row-add',
-          source,
-          target,
-          coefficient: value,
-        },
+        operation,
       })
 
-      onApply(target)
+      onApply(operation, target)
       onClose()
     } catch {
       return
     }
+  }
+
+  function handleRadioKeyDown(
+    event: KeyboardEvent<HTMLInputElement>,
+    type: OperationType,
+  ) {
+    if (event.key !== 'Enter') {
+      return
+    }
+
+    event.preventDefault()
+
+    setOperationType(type)
+
+    if (type === 'row-swap') {
+      apply()
+      return
+    }
+
+    setFocusOperationInput(true)
   }
 
   function handleCoefficientKeyDown(
@@ -171,6 +233,15 @@ function OperationDialog({
   function handleTargetCoefficientKeyDown(
     event: KeyboardEvent<HTMLInputElement>,
   ) {
+    if (
+      event.key === 'ArrowRight' &&
+      isAtInputEnd(event)
+    ) {
+      event.preventDefault()
+      sourceCoefficientRef.current?.focus()
+      return
+    }
+
     if (event.key !== 'Enter') {
       return
     }
@@ -187,6 +258,15 @@ function OperationDialog({
   function handleSourceCoefficientKeyDown(
     event: KeyboardEvent<HTMLInputElement>,
   ) {
+    if (
+      event.key === 'ArrowLeft' &&
+      isAtInputStart(event)
+    ) {
+      event.preventDefault()
+      targetCoefficientRef.current?.focus()
+      return
+    }
+
     if (event.key !== 'Enter') {
       return
     }
@@ -217,6 +297,7 @@ function OperationDialog({
           onChange={(event) => {
             setCoefficient(event.target.value)
           }}
+          onFocus={selectInputOnFocus}
           onBlur={() => {
             if (coefficient === '') {
               setCoefficient('1')
@@ -259,12 +340,16 @@ function OperationDialog({
           onChange={() => {
             setOperationType('row-add')
           }}
+          onKeyDown={(event) => {
+            handleRadioKeyDown(event, 'row-add')
+          }}
         />
         Add multiple
       </label>
 
       <label>
         <input
+          ref={swapRadioRef}
           type="radio"
           name="operation"
           value="row-swap"
@@ -272,12 +357,16 @@ function OperationDialog({
           onChange={() => {
             setOperationType('row-swap')
           }}
+          onKeyDown={(event) => {
+            handleRadioKeyDown(event, 'row-swap')
+          }}
         />
         Swap
       </label>
 
       <label>
         <input
+          ref={advancedRadioRef}
           type="radio"
           name="operation"
           value="row-linear-combination"
@@ -286,6 +375,12 @@ function OperationDialog({
           }
           onChange={() => {
             setOperationType('row-linear-combination')
+          }}
+          onKeyDown={(event) => {
+            handleRadioKeyDown(
+              event,
+              'row-linear-combination',
+            )
           }}
         />
         Advanced
@@ -304,6 +399,7 @@ function OperationDialog({
             onChange={(event) => {
               setCoefficient(event.target.value)
             }}
+            onFocus={selectInputOnFocus}
             onBlur={() => {
               if (coefficient === '') {
                 setCoefficient('1')
@@ -330,6 +426,7 @@ function OperationDialog({
               onChange={(event) => {
                 setTargetCoefficient(event.target.value)
               }}
+              onFocus={selectInputOnFocus}
               onBlur={() => {
                 if (targetCoefficient === '') {
                   setTargetCoefficient('1')
@@ -348,6 +445,7 @@ function OperationDialog({
               onChange={(event) => {
                 setSourceCoefficient(event.target.value)
               }}
+              onFocus={selectInputOnFocus}
               onBlur={() => {
                 if (sourceCoefficient === '') {
                   setSourceCoefficient('1')

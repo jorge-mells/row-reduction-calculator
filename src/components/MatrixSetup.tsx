@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import type { Dispatch, KeyboardEvent } from 'react'
 import { createMatrix } from '../engine/matrix'
 import type { AppAction } from '../state/reducer'
+import {
+  isAtInputEnd,
+  isAtInputStart,
+  selectInputOnFocus,
+} from './inputNavigation'
 
 interface MatrixSetupProps {
   dispatch: Dispatch<AppAction>
@@ -90,6 +95,12 @@ function MatrixSetup({
   function handleRowKeyDown(
     event: KeyboardEvent<HTMLInputElement>,
   ) {
+    if (event.key === 'ArrowRight' && isAtInputEnd(event)) {
+      event.preventDefault()
+      columnInputRef.current?.focus()
+      return
+    }
+
     if (event.key !== 'Enter') {
       return
     }
@@ -106,6 +117,15 @@ function MatrixSetup({
   function handleColumnKeyDown(
     event: KeyboardEvent<HTMLInputElement>,
   ) {
+    if (
+      event.key === 'ArrowLeft' &&
+      isAtInputStart(event)
+    ) {
+      event.preventDefault()
+      rowInputRef.current?.focus()
+      return
+    }
+
     if (event.key !== 'Enter') {
       return
     }
@@ -134,12 +154,12 @@ function MatrixSetup({
         Rows:
         <input
           ref={rowInputRef}
-          type="number"
-          min="1"
+          type="text"
           value={rowInput}
           onChange={(event) => {
             setRowInput(event.target.value)
           }}
+          onFocus={selectInputOnFocus}
           onBlur={() => {
             if (rowInput === '') {
               setRowInput(String(rows))
@@ -153,12 +173,12 @@ function MatrixSetup({
         Columns:
         <input
           ref={columnInputRef}
-          type="number"
-          min="1"
+          type="text"
           value={columnInput}
           onChange={(event) => {
             setColumnInput(event.target.value)
           }}
+          onFocus={selectInputOnFocus}
           onBlur={() => {
             if (columnInput === '') {
               setColumnInput(String(columns))

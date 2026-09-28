@@ -1,33 +1,12 @@
 import type { Dispatch } from 'react'
-import type { Fraction } from 'fraction.js'
-import type { RowOperation } from '../engine/operations'
 import type { AppAction } from '../state/reducer'
 import type { HistoryEntry } from '../state/appState'
+import { formatOperation } from '../engine/formatting'
 
 interface HistoryPanelProps {
   history: HistoryEntry[]
   historyIndex: number
   dispatch: Dispatch<AppAction>
-}
-
-function formatFraction(value: Fraction): string {
-  return value.toString()
-}
-
-function formatOperation(operation: RowOperation): string {
-  switch (operation.type) {
-    case 'row-add':
-      return `R${operation.target + 1} ← R${operation.target + 1} + ${formatFraction(operation.coefficient)}R${operation.source + 1}`
-
-    case 'row-swap':
-      return `R${operation.first + 1} ↔ R${operation.second + 1}`
-
-    case 'row-scale':
-      return `R${operation.row + 1} ← ${formatFraction(operation.coefficient)}R${operation.row + 1}`
-
-    case 'row-linear-combination':
-      return `R${operation.target + 1} ← ${formatFraction(operation.targetCoefficient)}R${operation.target + 1} + ${formatFraction(operation.sourceCoefficient)}R${operation.source + 1}`
-  }
 }
 
 function HistoryPanel({
@@ -42,6 +21,7 @@ function HistoryPanel({
       <ol>
         {history.map((entry, index) => {
           const isActive = index === historyIndex
+          const isFuture = index > historyIndex
 
           let label: string
 
@@ -60,7 +40,16 @@ function HistoryPanel({
           }
 
           return (
-            <li key={index}>
+            <li
+              className={[
+                'history-entry',
+                isActive ? 'active' : '',
+                isFuture ? 'future' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              key={index}
+            >
               <button
                 type="button"
                 disabled={isActive}
@@ -73,6 +62,30 @@ function HistoryPanel({
               >
                 {label}
               </button>
+
+              {isActive && (
+                <span className="history-current">
+                  Current
+                </span>
+              )}
+
+              <div className="history-matrix">
+                {entry.matrix.map((row, rowIndex) => (
+                  <div
+                    className="history-matrix-row"
+                    key={rowIndex}
+                  >
+                    {row.map((value, columnIndex) => (
+                      <span
+                        className="history-matrix-cell"
+                        key={columnIndex}
+                      >
+                        {value.toString()}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </li>
           )
         })}

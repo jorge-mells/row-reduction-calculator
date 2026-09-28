@@ -179,6 +179,113 @@ describe('appReducer', () => {
     expect(next.history[1].kind).toBe('edit')
   })
 
+  it('does nothing when editing a cell to its existing value', () => {
+    const state = createTestState()
+
+    const next = reduce(state, {
+      type: 'SET_CELL',
+      row: 0,
+      column: 1,
+      value: new Fraction(2),
+    })
+
+    expect(next).toBe(state)
+  })
+
+  it('does not discard future history when editing a cell to its existing value', () => {
+    const state = createTestState()
+
+    const afterFirstOperation = reduce(state, {
+      type: 'APPLY_OPERATION',
+      operation: {
+        type: 'row-add',
+        source: 0,
+        target: 1,
+        coefficient: new Fraction(-1),
+      },
+    })
+
+    const afterSecondOperation = reduce(
+      afterFirstOperation,
+      {
+        type: 'APPLY_OPERATION',
+        operation: {
+          type: 'row-scale',
+          row: 0,
+          coefficient: new Fraction(2),
+        },
+      },
+    )
+
+    const restored = reduce(afterSecondOperation, {
+      type: 'RESTORE_HISTORY',
+      index: 1,
+    })
+
+    const afterNoOpEdit = reduce(restored, {
+      type: 'SET_CELL',
+      row: 0,
+      column: 0,
+      value: new Fraction(1),
+    })
+
+    expect(afterNoOpEdit).toBe(restored)
+    expect(afterNoOpEdit.history).toHaveLength(3)
+    expect(afterNoOpEdit.historyIndex).toBe(1)
+  })
+
+  it('discards future history when editing a cell after restoring history', () => {
+    const state = createTestState()
+
+    const afterFirstOperation = reduce(state, {
+      type: 'APPLY_OPERATION',
+      operation: {
+        type: 'row-add',
+        source: 0,
+        target: 1,
+        coefficient: new Fraction(-1),
+      },
+    })
+
+    const afterSecondOperation = reduce(
+      afterFirstOperation,
+      {
+        type: 'APPLY_OPERATION',
+        operation: {
+          type: 'row-scale',
+          row: 0,
+          coefficient: new Fraction(2),
+        },
+      },
+    )
+
+    const restored = reduce(afterSecondOperation, {
+      type: 'RESTORE_HISTORY',
+      index: 1,
+    })
+
+    const afterEdit = reduce(restored, {
+      type: 'SET_CELL',
+      row: 0,
+      column: 0,
+      value: new Fraction(10),
+    })
+
+    expect(afterEdit.history).toHaveLength(3)
+    expect(afterEdit.history[1].operation?.type).toBe(
+      'row-add',
+    )
+    expect(afterEdit.history[2].kind).toBe('edit')
+    expect(afterEdit.historyIndex).toBe(2)
+
+    expect(
+      matricesEqual(afterEdit.matrix, [
+        [new Fraction(10), new Fraction(2)],
+        [new Fraction(2), new Fraction(2)],
+      ]),
+    ).toBe(true)
+  })
+
   it('batches consecutive cell edits into one history entry', () => {
     const state = createTestState()
 
@@ -356,5 +463,4 @@ describe('appReducer', () => {
     )
     expect(afterNewOperation.historyIndex).toBe(2)
   })
-
 })

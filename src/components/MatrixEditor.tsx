@@ -17,6 +17,7 @@ interface MatrixEditorProps {
     id: number
     row: number
   }
+  activeRow: number | null
 }
 
 function MatrixEditor({
@@ -26,6 +27,7 @@ function MatrixEditor({
   onDropRow,
   focusFirstCellRequest,
   focusRowRequest,
+  activeRow,
 }: MatrixEditorProps) {
   const cellRefs = useRef<HTMLInputElement[][]>([])
 
@@ -155,7 +157,7 @@ function MatrixEditor({
           onDropRow={onDropRow}
           setCellRef={setCellRef}
           onNavigate={navigateCell}
-          isActive={rowIndex === focusRowRequest.row}
+          isActive={rowIndex === activeRow}
         />
       ))}
     </div>

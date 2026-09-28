@@ -130,11 +130,22 @@ export function appReducer(
         return state
       }
 
+      if (
+        matrix[action.row][action.column].equals(action.value)
+      ) {
+        return state
+      }
+
       matrix[action.row][action.column] = action.value
 
       const currentEntry = state.history[state.historyIndex]
+      const hasFutureHistory =
+        state.historyIndex < state.history.length - 1
 
-      if (currentEntry.kind === 'edit') {
+      if (
+        currentEntry.kind === 'edit' &&
+        !hasFutureHistory
+      ) {
         const history = [...state.history]
 
         history[state.historyIndex] = {

@@ -3,6 +3,11 @@ import type { Dispatch, KeyboardEvent } from 'react'
 import Fraction from 'fraction.js'
 import type { Matrix } from '../engine/matrix'
 import type { AppAction } from '../state/reducer'
+import {
+  isAtInputEnd,
+  isAtInputStart,
+  selectInputOnFocus,
+} from './inputNavigation'
 
 interface MatrixRowProps {
   row: Matrix[number]
@@ -76,15 +81,30 @@ function MatrixRow({
         )
         break
 
-      case 'Tab':
-        event.preventDefault()
-        commitCell(columnIndex)
+      case 'ArrowLeft':
+        if (isAtInputStart(event)) {
+          event.preventDefault()
+          commitCell(columnIndex)
 
-        onNavigate(
-          rowIndex,
-          columnIndex,
-          event.shiftKey ? 'up' : 'down',
-        )
+          onNavigate(
+            rowIndex,
+            columnIndex,
+            'left',
+          )
+        }
+        break
+
+      case 'ArrowRight':
+        if (isAtInputEnd(event)) {
+          event.preventDefault()
+          commitCell(columnIndex)
+
+          onNavigate(
+            rowIndex,
+            columnIndex,
+            'right',
+          )
+        }
         break
 
       case 'ArrowUp':
@@ -160,9 +180,7 @@ function MatrixRow({
               return next
             })
           }}
-          onFocus={(event) => {
-            event.target.select()
-          }}
+          onFocus={selectInputOnFocus}
           onBlur={() => {
             commitCell(columnIndex)
           }}
