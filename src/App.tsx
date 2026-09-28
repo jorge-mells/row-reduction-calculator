@@ -1,4 +1,5 @@
 import { useReducer } from 'react'
+import MatrixEditor from './components/MatrixEditor'
 import { initialState } from './state/initialState'
 import { appReducer } from './state/reducer'
 
@@ -12,9 +13,10 @@ function App() {
     <main>
       <h1>Row Reduction Calculator</h1>
 
-      <pre>
-        {JSON.stringify(state.matrix, null, 2)}
-      </pre>
+      <MatrixEditor
+        matrix={state.matrix}
+        dispatch={dispatch}
+      />
     </main>
   )
 }
