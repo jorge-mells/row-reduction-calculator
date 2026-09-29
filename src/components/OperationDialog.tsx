@@ -45,10 +45,8 @@ function OperationDialog({
     useState<OperationType>('row-add')
 
   const [coefficient, setCoefficient] = useState('1')
-
   const [targetCoefficient, setTargetCoefficient] =
     useState('1')
-
   const [sourceCoefficient, setSourceCoefficient] =
     useState('1')
 
@@ -283,200 +281,337 @@ function OperationDialog({
 
   if (singleRow) {
     return (
-      <div>
-        <h2>Scale R{source + 1}</h2>
-
-        <h3>
-          R{source + 1} ← cR{source + 1}
-        </h3>
-
-        <input
-          ref={coefficientRef}
-          type="text"
-          value={coefficient}
-          onChange={(event) => {
-            setCoefficient(event.target.value)
-          }}
-          onFocus={selectInputOnFocus}
-          onBlur={() => {
-            if (coefficient === '') {
-              setCoefficient('1')
-            }
-          }}
-          onKeyDown={handleCoefficientKeyDown}
-          placeholder="Coefficient"
-        />
-
-        <button
-          type="button"
-          onClick={apply}
+      <div
+        className="dialog-backdrop"
+        role="presentation"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) {
+            onClose()
+          }
+        }}
+      >
+        <div
+          className="operation-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="operation-dialog-title"
         >
-          Apply
-        </button>
+          <div className="dialog-header">
+            <div>
+              <p className="dialog-eyebrow">
+                Row operation
+              </p>
+              <h2 id="operation-dialog-title">
+                Scale R{source + 1}
+              </h2>
+            </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-        >
-          Cancel
-        </button>
+            <button
+              type="button"
+              className="dialog-close"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="operation-preview">
+            R{source + 1}{' '}
+            <span>←</span>{' '}
+            cR{source + 1}
+          </div>
+
+          <label className="dialog-field">
+            <span>Coefficient</span>
+            <input
+              ref={coefficientRef}
+              type="text"
+              value={coefficient}
+              onChange={(event) => {
+                setCoefficient(event.target.value)
+              }}
+              onFocus={selectInputOnFocus}
+              onBlur={() => {
+                if (coefficient === '') {
+                  setCoefficient('1')
+                }
+              }}
+              onKeyDown={handleCoefficientKeyDown}
+              placeholder="1/3, -2, 5..."
+            />
+          </label>
+
+          <div className="dialog-actions">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              className="primary-button"
+              onClick={apply}
+            >
+              Apply operation
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div>
-      <h2>
-        R{source + 1} → R{target! + 1}
-      </h2>
+    <div
+      className="dialog-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose()
+        }
+      }}
+    >
+      <div
+        className="operation-dialog operation-dialog-wide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="operation-dialog-title"
+      >
+        <div className="dialog-header">
+          <div>
+            <p className="dialog-eyebrow">
+              Row operation
+            </p>
+            <h2 id="operation-dialog-title">
+              R{source + 1} → R{target! + 1}
+            </h2>
+          </div>
 
-      <label>
-        <input
-          ref={addRadioRef}
-          type="radio"
-          name="operation"
-          value="row-add"
-          checked={operationType === 'row-add'}
-          onChange={() => {
-            setOperationType('row-add')
-          }}
-          onKeyDown={(event) => {
-            handleRadioKeyDown(event, 'row-add')
-          }}
-        />
-        Add multiple
-      </label>
+          <button
+            type="button"
+            className="dialog-close"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
 
-      <label>
-        <input
-          ref={swapRadioRef}
-          type="radio"
-          name="operation"
-          value="row-swap"
-          checked={operationType === 'row-swap'}
-          onChange={() => {
-            setOperationType('row-swap')
-          }}
-          onKeyDown={(event) => {
-            handleRadioKeyDown(event, 'row-swap')
-          }}
-        />
-        Swap
-      </label>
+        <div className="operation-types">
+          <label
+            className={`operation-option${operationType === 'row-add'
+                ? ' selected'
+                : ''
+              }`}
+          >
+            <input
+              ref={addRadioRef}
+              type="radio"
+              name="operation"
+              value="row-add"
+              checked={operationType === 'row-add'}
+              onChange={() => {
+                setOperationType('row-add')
+              }}
+              onKeyDown={(event) => {
+                handleRadioKeyDown(event, 'row-add')
+              }}
+            />
 
-      <label>
-        <input
-          ref={advancedRadioRef}
-          type="radio"
-          name="operation"
-          value="row-linear-combination"
-          checked={
-            operationType === 'row-linear-combination'
-          }
-          onChange={() => {
-            setOperationType('row-linear-combination')
-          }}
-          onKeyDown={(event) => {
-            handleRadioKeyDown(
-              event,
-              'row-linear-combination',
-            )
-          }}
-        />
-        Advanced
-      </label>
+            <span>
+              <strong>Add multiple</strong>
+              <small>
+                Add a multiple of the source row.
+              </small>
+            </span>
+          </label>
 
-      {operationType === 'row-add' && (
-        <>
-          <h3>
-            R{target! + 1} ← R{target! + 1} + cR{source + 1}
-          </h3>
+          <label
+            className={`operation-option${operationType === 'row-swap'
+                ? ' selected'
+                : ''
+              }`}
+          >
+            <input
+              ref={swapRadioRef}
+              type="radio"
+              name="operation"
+              value="row-swap"
+              checked={operationType === 'row-swap'}
+              onChange={() => {
+                setOperationType('row-swap')
+              }}
+              onKeyDown={(event) => {
+                handleRadioKeyDown(event, 'row-swap')
+              }}
+            />
 
-          <input
-            ref={coefficientRef}
-            type="text"
-            value={coefficient}
-            onChange={(event) => {
-              setCoefficient(event.target.value)
-            }}
-            onFocus={selectInputOnFocus}
-            onBlur={() => {
-              if (coefficient === '') {
-                setCoefficient('1')
+            <span>
+              <strong>Swap rows</strong>
+              <small>
+                Exchange the two selected rows.
+              </small>
+            </span>
+          </label>
+
+          <label
+            className={`operation-option${operationType ===
+                'row-linear-combination'
+                ? ' selected'
+                : ''
+              }`}
+          >
+            <input
+              ref={advancedRadioRef}
+              type="radio"
+              name="operation"
+              value="row-linear-combination"
+              checked={
+                operationType ===
+                'row-linear-combination'
               }
-            }}
-            onKeyDown={handleCoefficientKeyDown}
-            placeholder="Coefficient"
-          />
-        </>
-      )}
-
-      {operationType === 'row-linear-combination' && (
-        <>
-          <h3>
-            R{target! + 1} ← aR{target! + 1} + bR{source + 1}
-          </h3>
-
-          <label>
-            a:
-            <input
-              ref={targetCoefficientRef}
-              type="text"
-              value={targetCoefficient}
-              onChange={(event) => {
-                setTargetCoefficient(event.target.value)
+              onChange={() => {
+                setOperationType(
+                  'row-linear-combination',
+                )
               }}
-              onFocus={selectInputOnFocus}
-              onBlur={() => {
-                if (targetCoefficient === '') {
-                  setTargetCoefficient('1')
-                }
+              onKeyDown={(event) => {
+                handleRadioKeyDown(
+                  event,
+                  'row-linear-combination',
+                )
               }}
-              onKeyDown={handleTargetCoefficientKeyDown}
             />
+
+            <span>
+              <strong>Linear combination</strong>
+              <small>
+                Scale both rows before combining them.
+              </small>
+            </span>
           </label>
+        </div>
 
-          <label>
-            b:
-            <input
-              ref={sourceCoefficientRef}
-              type="text"
-              value={sourceCoefficient}
-              onChange={(event) => {
-                setSourceCoefficient(event.target.value)
-              }}
-              onFocus={selectInputOnFocus}
-              onBlur={() => {
-                if (sourceCoefficient === '') {
-                  setSourceCoefficient('1')
-                }
-              }}
-              onKeyDown={handleSourceCoefficientKeyDown}
-              placeholder="Coefficient"
-            />
-          </label>
-        </>
-      )}
+        {operationType === 'row-add' && (
+          <div className="operation-form">
+            <div className="operation-preview">
+              R{target! + 1}{' '}
+              <span>←</span>{' '}
+              R{target! + 1} + cR{source + 1}
+            </div>
 
-      {operationType === 'row-swap' && (
-        <h3>
-          R{source + 1} ↔ R{target! + 1}
-        </h3>
-      )}
+            <label className="dialog-field">
+              <span>Coefficient c</span>
+              <input
+                ref={coefficientRef}
+                type="text"
+                value={coefficient}
+                onChange={(event) => {
+                  setCoefficient(event.target.value)
+                }}
+                onFocus={selectInputOnFocus}
+                onBlur={() => {
+                  if (coefficient === '') {
+                    setCoefficient('1')
+                  }
+                }}
+                onKeyDown={handleCoefficientKeyDown}
+                placeholder="1/3, -2, 5..."
+              />
+            </label>
+          </div>
+        )}
 
-      <button
-        type="button"
-        onClick={apply}
-      >
-        Apply
-      </button>
+        {operationType ===
+          'row-linear-combination' && (
+            <div className="operation-form">
+              <div className="operation-preview">
+                R{target! + 1}{' '}
+                <span>←</span>{' '}
+                aR{target! + 1} + bR{source + 1}
+              </div>
 
-      <button
-        type="button"
-        onClick={onClose}
-      >
-        Cancel
-      </button>
+              <div className="coefficient-grid">
+                <label className="dialog-field">
+                  <span>Target coefficient a</span>
+                  <input
+                    ref={targetCoefficientRef}
+                    type="text"
+                    value={targetCoefficient}
+                    onChange={(event) => {
+                      setTargetCoefficient(
+                        event.target.value,
+                      )
+                    }}
+                    onFocus={selectInputOnFocus}
+                    onBlur={() => {
+                      if (targetCoefficient === '') {
+                        setTargetCoefficient('1')
+                      }
+                    }}
+                    onKeyDown={
+                      handleTargetCoefficientKeyDown
+                    }
+                  />
+                </label>
+
+                <label className="dialog-field">
+                  <span>Source coefficient b</span>
+                  <input
+                    ref={sourceCoefficientRef}
+                    type="text"
+                    value={sourceCoefficient}
+                    onChange={(event) => {
+                      setSourceCoefficient(
+                        event.target.value,
+                      )
+                    }}
+                    onFocus={selectInputOnFocus}
+                    onBlur={() => {
+                      if (sourceCoefficient === '') {
+                        setSourceCoefficient('1')
+                      }
+                    }}
+                    onKeyDown={
+                      handleSourceCoefficientKeyDown
+                    }
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+
+        {operationType === 'row-swap' && (
+          <div className="operation-form">
+            <div className="operation-preview">
+              R{source + 1}{' '}
+              <span>↔</span>{' '}
+              R{target! + 1}
+            </div>
+          </div>
+        )}
+
+        <div className="dialog-actions">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            className="primary-button"
+            onClick={apply}
+          >
+            Apply operation
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

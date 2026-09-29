@@ -67,6 +67,8 @@ function MatrixSetup({
         dimensions.columns,
       ),
     })
+
+    onSubmit()
   }
 
   function resize() {
@@ -147,62 +149,77 @@ function MatrixSetup({
     Number(columnInput) !== columns
 
   return (
-    <section>
-      <h2>Matrix</h2>
+    <div className="matrix-setup">
+      <div className="setup-title">
+        <span className="section-eyebrow">Setup</span>
+        <strong>Matrix dimensions</strong>
+      </div>
 
-      <label>
-        Rows:
-        <input
-          ref={rowInputRef}
-          type="text"
-          value={rowInput}
-          onChange={(event) => {
-            setRowInput(event.target.value)
-          }}
-          onFocus={selectInputOnFocus}
-          onBlur={() => {
-            if (rowInput === '') {
-              setRowInput(String(rows))
-            }
-          }}
-          onKeyDown={handleRowKeyDown}
-        />
-      </label>
+      <div className="dimension-fields">
+        <label className="dimension-field">
+          <span>Rows</span>
+          <input
+            ref={rowInputRef}
+            type="text"
+            inputMode="numeric"
+            value={rowInput}
+            onChange={(event) => {
+              setRowInput(event.target.value)
+            }}
+            onFocus={selectInputOnFocus}
+            onBlur={() => {
+              if (rowInput === '') {
+                setRowInput(String(rows))
+              }
+            }}
+            onKeyDown={handleRowKeyDown}
+            aria-label="Number of rows"
+          />
+        </label>
 
-      <label>
-        Columns:
-        <input
-          ref={columnInputRef}
-          type="text"
-          value={columnInput}
-          onChange={(event) => {
-            setColumnInput(event.target.value)
-          }}
-          onFocus={selectInputOnFocus}
-          onBlur={() => {
-            if (columnInput === '') {
-              setColumnInput(String(columns))
-            }
-          }}
-          onKeyDown={handleColumnKeyDown}
-        />
-      </label>
+        <span className="dimension-separator">×</span>
 
-      <button
-        type="button"
-        onClick={resize}
-        disabled={!dimensionsChanged}
-      >
-        Resize
-      </button>
+        <label className="dimension-field">
+          <span>Columns</span>
+          <input
+            ref={columnInputRef}
+            type="text"
+            inputMode="numeric"
+            value={columnInput}
+            onChange={(event) => {
+              setColumnInput(event.target.value)
+            }}
+            onFocus={selectInputOnFocus}
+            onBlur={() => {
+              if (columnInput === '') {
+                setColumnInput(String(columns))
+              }
+            }}
+            onKeyDown={handleColumnKeyDown}
+            aria-label="Number of columns"
+          />
+        </label>
+      </div>
 
-      <button
-        type="button"
-        onClick={create}
-      >
-        Create matrix
-      </button>
-    </section>
+      <div className="setup-actions">
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={resize}
+          disabled={!dimensionsChanged}
+        >
+          Resize
+        </button>
+
+        <button
+          type="button"
+          className="primary-button"
+          onClick={create}
+        >
+          New matrix
+        </button>
+      </div>
+    </div>
   )
 }
 

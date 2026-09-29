@@ -146,20 +146,22 @@ function MatrixEditor({
   }, [focusRowRequest.id])
 
   return (
-    <div className="matrix">
-      {matrix.map((row, rowIndex) => (
-        <MatrixRow
-          key={rowIndex}
-          row={row}
-          rowIndex={rowIndex}
-          dispatch={dispatch}
-          onScaleRow={onScaleRow}
-          onDropRow={onDropRow}
-          setCellRef={setCellRef}
-          onNavigate={navigateCell}
-          isActive={rowIndex === activeRow}
-        />
-      ))}
+    <div className="matrix-scroll">
+      <div className="matrix">
+        {matrix.map((row, rowIndex) => (
+          <MatrixRow
+            key={rowIndex}
+            row={row}
+            rowIndex={rowIndex}
+            dispatch={dispatch}
+            onScaleRow={onScaleRow}
+            onDropRow={onDropRow}
+            setCellRef={setCellRef}
+            onNavigate={navigateCell}
+            isActive={rowIndex === activeRow}
+          />
+        ))}
+      </div>
     </div>
   )
 }

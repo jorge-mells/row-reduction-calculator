@@ -15,10 +15,19 @@ function HistoryPanel({
   dispatch,
 }: HistoryPanelProps) {
   return (
-    <section>
-      <h2>History</h2>
+    <section className="history-panel">
+      <div className="history-header">
+        <div>
+          <p className="section-eyebrow">Timeline</p>
+          <h2>History</h2>
+        </div>
 
-      <ol>
+        <span className="history-count">
+          {history.length}
+        </span>
+      </div>
+
+      <div className="history-list">
         {history.map((entry, index) => {
           const isActive = index === historyIndex
           const isFuture = index > historyIndex
@@ -40,7 +49,7 @@ function HistoryPanel({
           }
 
           return (
-            <li
+            <div
               className={[
                 'history-entry',
                 isActive ? 'active' : '',
@@ -50,46 +59,54 @@ function HistoryPanel({
                 .join(' ')}
               key={index}
             >
-              <button
-                type="button"
-                disabled={isActive}
-                onClick={() => {
-                  dispatch({
-                    type: 'RESTORE_HISTORY',
-                    index,
-                  })
-                }}
-              >
-                {label}
-              </button>
-
-              {isActive && (
-                <span className="history-current">
-                  Current
-                </span>
-              )}
-
-              <div className="history-matrix">
-                {entry.matrix.map((row, rowIndex) => (
-                  <div
-                    className="history-matrix-row"
-                    key={rowIndex}
-                  >
-                    {row.map((value, columnIndex) => (
-                      <span
-                        className="history-matrix-cell"
-                        key={columnIndex}
-                      >
-                        {value.toString()}
-                      </span>
-                    ))}
-                  </div>
-                ))}
+              <div className="history-marker">
+                <span />
               </div>
-            </li>
+
+              <div className="history-content">
+                <div className="history-entry-top">
+                  <button
+                    type="button"
+                    disabled={isActive}
+                    onClick={() => {
+                      dispatch({
+                        type: 'RESTORE_HISTORY',
+                        index,
+                      })
+                    }}
+                  >
+                    {label}
+                  </button>
+
+                  {isActive && (
+                    <span className="history-current">
+                      Current
+                    </span>
+                  )}
+                </div>
+
+                <div className="history-matrix">
+                  {entry.matrix.map((row, rowIndex) => (
+                    <div
+                      className="history-matrix-row"
+                      key={rowIndex}
+                    >
+                      {row.map((value, columnIndex) => (
+                        <span
+                          className="history-matrix-cell"
+                          key={columnIndex}
+                        >
+                          {value.toString()}
+                        </span>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )
         })}
-      </ol>
+      </div>
     </section>
   )
 }

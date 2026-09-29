@@ -128,6 +128,7 @@ function MatrixRow({
       className={`matrix-row${isActive ? ' active' : ''}`}
     >
       <button
+        type="button"
         className="row-header"
         draggable
         onClick={() => {
@@ -158,8 +159,13 @@ function MatrixRow({
 
           onDropRow(source, rowIndex)
         }}
+        aria-label={`Row ${rowIndex + 1}. Click to scale or drag onto another row.`}
+        title={`R${rowIndex + 1}: click to scale`}
       >
-        R{rowIndex + 1}
+        <span className="row-grip" aria-hidden="true">
+          ⠿
+        </span>
+        <span>R{rowIndex + 1}</span>
       </button>
 
       {values.map((value, columnIndex) => (
@@ -187,6 +193,7 @@ function MatrixRow({
           onKeyDown={(event) => {
             handleKeyDown(event, columnIndex)
           }}
+          aria-label={`Row ${rowIndex + 1}, column ${columnIndex + 1}`}
         />
       ))}
     </div>
