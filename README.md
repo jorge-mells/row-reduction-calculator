@@ -46,6 +46,7 @@ npm test
 
 * Add a **repeat last operation** feature, or otherwise provide a convenient way to reapply the previous row operation.
 * Support row operations involving **three or more operands**.
+* Add mobile view as well
 
 ## License
 
